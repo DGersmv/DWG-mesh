@@ -122,6 +122,16 @@
     // ── Инициализация ────────────────────────────────────────────────────────
 
     async function init() {
+      // sometimes the ACAPI object arrives slightly after the page load event
+      // (depending on browser timings and registration order).  if we can't
+      // access it right away we'll wait a short moment and try again.
+      const fn = ensureACAPI('GetLayerList');
+      if (!fn) {
+        setInfo('ACAPI недоступен, повторная попытка…', 'info-err');
+        setTimeout(init, 100);
+        return;
+      }
+
       await populateLayers();
       await populateStories();
     }
