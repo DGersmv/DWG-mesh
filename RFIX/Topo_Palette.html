@@ -2,25 +2,15 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>DWG Topo Mesh</title>
+  <title>DWG Mesh — Топо Mesh из DWG</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background: #efefef;
       margin: 0;
       color: #2f2f2f;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 12px 0;
-    }
-    .palette {
-      width: 336px;
-      background: #efefef;
-      border: 1px solid #a6a3a0;
-      box-shadow: inset 0 0 0 1px #f8f8f8;
-      padding: 12px;
-      box-sizing: border-box;
+      padding: 10px;
       font-size: 12px;
       line-height: 1.35;
     }
@@ -31,10 +21,10 @@
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
-    .section { margin-bottom: 12px; }
+    .section { margin-bottom: 10px; }
     .section-title {
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       text-transform: uppercase;
       font-size: 11px;
       color: #54524f;
@@ -42,9 +32,49 @@
     .divider {
       height: 1px;
       background: #c7c3bd;
-      margin: 10px 0;
+      margin: 8px 0;
     }
-    .button-flat {
+    .form-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+    .form-row label {
+      width: 155px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #3a3a3a;
+    }
+    .form-row select,
+    .form-row input[type="number"],
+    .form-row input[type="text"] {
+      flex: 1;
+      padding: 3px 5px;
+      border: 1px solid #ada9a4;
+      border-radius: 2px;
+      background: #ffffff;
+      font-size: 12px;
+    }
+    .sep-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .sep-group label { font-size: 12px; cursor: pointer; width: auto; }
+    .preview-box {
+      flex: 1;
+      padding: 3px 6px;
+      border: 1px solid #c0beb9;
+      background: #f9f8f6;
+      font-size: 11px;
+      min-height: 22px;
+      color: #444;
+      font-family: monospace;
+    }
+    .preview-ok  { color: #2a6e00; font-weight: 600; }
+    .preview-err { color: #900; }
+    .btn {
       display: inline-block;
       padding: 4px 10px;
       border: 1px solid #a8a5a2;
@@ -55,317 +85,259 @@
       cursor: pointer;
       box-shadow: inset 0 1px 0 #f5f4f2;
       text-align: center;
+      width: 100%;
     }
-    .button-flat:hover { background: #e7e4de; }
-    .button-flat:active { background: #cac7c2; }
-    .button-flat:disabled { background: #e2e0de; color: #8a8a8a; cursor: default; }
-    .button-primary { font-weight: 600; }
-    .button-full { width: 100%; box-sizing: border-box; }
-    .button-inline { padding: 4px 12px; }
-    .form-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .form-row label {
-      width: 150px;
-      font-size: 11px;
-      flex-shrink: 0;
-    }
-    input[type="number"], input[type="text"], select {
-      flex: 1;
-      padding: 3px 4px;
-      border: 1px solid #ada9a4;
-      border-radius: 2px;
-      background: #ffffff;
-      box-sizing: border-box;
-      font-size: 12px;
-    }
-    input[type="number"] { text-align: center; }
-    /* Секция парсинга */
-    .parse-example {
-      margin-top: 6px;
-      padding: 5px 6px;
-      background: #fff;
-      border: 1px solid #c0beb9;
-      font-size: 12px;
-      font-family: monospace;
-      color: #555;
-      min-height: 18px;
-    }
-    .parse-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 6px;
-    }
-    .parse-row input[type="number"] {
-      width: 64px;
-      flex: none;
-    }
-    .parse-row input[type="text"] {
-      width: 28px;
-      flex: none;
-      text-align: center;
-    }
-    .parse-sep {
-      font-size: 11px;
-      color: #777;
-    }
-    .parse-result {
-      margin-left: 6px;
-      font-weight: 600;
-      font-size: 12px;
-      color: #2a6000;
-      white-space: nowrap;
-    }
+    .btn:hover   { background: #e7e4de; }
+    .btn:active  { background: #cac7c2; }
+    .btn:disabled { background: #e2e0de; color: #999; cursor: default; }
+    .btn-primary { font-weight: 600; }
     .info-box {
-      margin-top: 6px;
-      padding: 6px;
+      padding: 6px 7px;
       border: 1px solid #c0beb9;
       background: #f9f8f6;
       font-size: 11px;
-      line-height: 1.4;
-      min-height: 32px;
+      line-height: 1.5;
+      min-height: 24px;
     }
-    .controls-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 8px;
-    }
+    .info-ok  { color: #2a6e00; font-weight: 600; }
+    .info-err { color: #900; font-weight: 600; }
   </style>
+
   <script>
-    // ── helpers ──────────────────────────────────────────────────────────────
-    function setInfo(text) {
-      const box = document.getElementById('info-box');
-      if (box) box.textContent = text;
-    }
+    function $(id) { return document.getElementById(id); }
 
     function ensureACAPI(fnName) {
       const api = window.ACAPI;
-      if (!api || typeof api[fnName] !== 'function') {
-        setInfo('Функция ' + fnName + ' недоступна. Обновите плагин.');
-        return null;
-      }
+      if (!api || typeof api[fnName] !== 'function') return null;
       return api[fnName].bind(api);
     }
 
-    function parseNum(input, fallback) {
-      if (!input) return fallback;
-      const v = parseFloat(String(input.value || '').replace(',', '.'));
-      return Number.isFinite(v) ? v : fallback;
+    function setInfo(text, cls) {
+      const box = $('infoBox');
+      if (!box) return;
+      box.textContent = text;
+      box.className = 'info-box' + (cls ? ' ' + cls : '');
     }
 
-    // ── Загрузка списков слоёв и этажей ──────────────────────────────────────
-    async function loadLayers() {
+    // ── Инициализация ────────────────────────────────────────────────────────
+
+    async function init() {
+      await populateLayers();
+      await populateStories();
+    }
+
+    async function populateLayers() {
       const fn = ensureACAPI('GetLayerList');
-      if (!fn) return;
+      if (!fn) { setInfo('ACAPI недоступен', 'info-err'); return; }
       try {
-        const raw = await fn();
-        const layers = JSON.parse(raw || '[]');
-        const sel = document.getElementById('layerSelect');
-        const meshSel = document.getElementById('meshLayerSelect');
-        sel.innerHTML = '';
-        meshSel.innerHTML = '';
-        layers.forEach(function(l) {
-          const o1 = new Option(l.name, l.index);
-          const o2 = new Option(l.name, l.index);
-          sel.appendChild(o1);
-          meshSel.appendChild(o2);
-        });
+        const json = await fn();
+        const layers = JSON.parse(json);
+        fillSelect('layerSelect',     layers, l => l.index, l => l.name);
+        fillSelect('meshLayerSelect', layers, l => l.index, l => l.name);
       } catch(e) {
-        setInfo('Ошибка загрузки слоёв: ' + e);
+        setInfo('Ошибка загрузки слоёв: ' + e, 'info-err');
       }
     }
 
-    async function loadStories() {
+    async function populateStories() {
       const fn = ensureACAPI('GetStoryList');
       if (!fn) return;
       try {
-        const raw = await fn();
-        const stories = JSON.parse(raw || '[]');
-        const sel = document.getElementById('storySelect');
-        sel.innerHTML = '';
-        stories.forEach(function(s) {
-          sel.appendChild(new Option(s.name, s.index));
-        });
-      } catch(e) {
-        setInfo('Ошибка загрузки этажей: ' + e);
-      }
+        const json = await fn();
+        const stories = JSON.parse(json);
+        fillSelect('storySelect', stories, s => s.index, s => s.name);
+      } catch(e) { /* тихо */ }
     }
 
-    // ── Загрузка примера текста отметки со слоя ──────────────────────────────
-    async function loadSampleText() {
+    function fillSelect(id, items, valFn, textFn) {
+      const sel = $(id);
+      if (!sel) return;
+      sel.innerHTML = '';
+      items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = valFn(item);
+        opt.textContent = textFn(item);
+        sel.appendChild(opt);
+      });
+    }
+
+    // ── Парсинг / превью ─────────────────────────────────────────────────────
+
+    async function loadSample() {
       const fn = ensureACAPI('GetSampleElevationText');
-      if (!fn) return;
-      const layerIdx = document.getElementById('layerSelect').value;
+      if (!fn) { setInfo('ACAPI недоступен', 'info-err'); return; }
+
+      const layerIdx = parseInt($('layerSelect').value, 10);
+      if (isNaN(layerIdx)) return;
+
+      $('sampleRaw').textContent = '...';
+      $('sampleResult').textContent = '';
+      $('sampleResult').className = '';
+
       try {
         const sample = await fn(layerIdx);
-        document.getElementById('sampleText').textContent = sample || '(нет текста на слое)';
-        autoDetectSeparator(sample || '');
+        $('sampleRaw').textContent = sample;
+        updatePreview(sample);
       } catch(e) {
-        document.getElementById('sampleText').textContent = '(ошибка)';
+        $('sampleRaw').textContent = '(ошибка)';
       }
     }
 
-    // ── Автоопределение разделителя и парсинг ────────────────────────────────
-    function autoDetectSeparator(text) {
-      // Ищем первый . или , в тексте — он и есть разделитель
-      const m = text.match(/[\d]+([.,])[\d]+/);
-      const sep = m ? m[1] : '.';
-      document.getElementById('sepInput').value = sep;
-      updateParse();
-    }
-
-    function updateParse() {
-      const sample = document.getElementById('sampleText').textContent;
-      const sep = document.getElementById('sepInput').value || '.';
-
-      // Вытащить первое число из текста по разделителю
-      const re = new RegExp('([+-]?\\d+)' + (sep === '.' ? '\\.' : ',') + '(\\d+)');
-      const m = sample.match(re);
-
-      let mVal = 0, mmVal = 0;
-      if (m) {
-        mVal  = parseInt(m[1], 10);
-        mmVal = parseInt(m[2].substring(0, 3).padEnd(3, '0'), 10); // до 3 цифр → мм
+    function updatePreview(rawText) {
+      if (!rawText || rawText === '...' || rawText === '(ошибка)') return;
+      const sep = document.querySelector('input[name="sep"]:checked')?.value || '.';
+      const val = parseElevation(rawText, sep);
+      const box = $('sampleResult');
+      if (val !== null) {
+        box.textContent = '→ ' + val.toFixed(3) + ' м';
+        box.className = 'preview-ok';
       } else {
-        // Целое число без разделителя
-        const mInt = sample.match(/([+-]?\d+)/);
-        if (mInt) mVal = parseInt(mInt[1], 10);
+        box.textContent = '→ не распознано';
+        box.className = 'preview-err';
       }
-
-      document.getElementById('mInput').value  = mVal;
-      document.getElementById('mmInput').value = mmVal;
-      recalcResult();
     }
 
-    function recalcResult() {
-      const mVal  = parseFloat(document.getElementById('mInput').value)  || 0;
-      const mmVal = parseFloat(document.getElementById('mmInput').value) || 0;
-      const result = mVal * 1000 + mmVal;
-      document.getElementById('parseResult').textContent = '= ' + result + ' мм';
+    // Зеркалит логику C++ ParseElevationText
+    function parseElevation(text, sep) {
+      text = text.trim();
+      let neg = false;
+      if (text[0] === '+') text = text.slice(1);
+      else if (text[0] === '-') { neg = true; text = text.slice(1); }
+      if (sep === ',') text = text.replace(',', '.');
+      const val = parseFloat(text);
+      if (isNaN(val)) return null;
+      return neg ? -val : val;
     }
 
-    // ── Создание Mesh ─────────────────────────────────────────────────────────
+    function onLayerChange() { loadSample(); }
+    function onSepChange()   {
+      const raw = $('sampleRaw').textContent;
+      if (raw && raw !== '...' && raw !== '(ошибка)' && raw !== '(нажмите «Загрузить»)')
+        updatePreview(raw);
+    }
+
+    // ── Создание Mesh ────────────────────────────────────────────────────────
+
     async function createTopoMesh() {
       const fn = ensureACAPI('CreateTopoMesh');
-      if (!fn) return;
+      if (!fn) { setInfo('ACAPI.CreateTopoMesh недоступен', 'info-err'); return; }
 
-      const layerIdx    = document.getElementById('layerSelect').value;
-      const radius      = parseNum(document.getElementById('searchRadius'), 3000);
-      const sep         = document.getElementById('sepInput').value || '.';
-      const mVal        = parseFloat(document.getElementById('mInput').value)  || 0;
-      const mmVal       = parseFloat(document.getElementById('mmInput').value) || 0;
-      const storyIdx    = document.getElementById('storySelect').value;
-      const bboxOffset  = parseNum(document.getElementById('bboxOffset'), 1000);
-      const meshName    = document.getElementById('meshName').value || 'TopoMesh';
-      const meshLayer   = document.getElementById('meshLayerSelect').value;
+      const layerIdx   = parseInt($('layerSelect').value,      10);
+      const storyIdx   = parseInt($('storySelect').value,      10);
+      const meshLayer  = parseInt($('meshLayerSelect').value,  10);
+      const radius     = parseFloat($('radius').value)         || 3000;
+      const bboxOffset = parseFloat($('bboxOffset').value)     || 1000;
+      const meshName   = $('meshName').value.trim()            || 'TopoMesh';
+      const sep        = document.querySelector('input[name="sep"]:checked')?.value || '.';
 
-      if (radius <= 0) { setInfo('Радиус поиска должен быть > 0.'); return; }
+      if (isNaN(layerIdx)) { setInfo('Выберите слой с отметками', 'info-err'); return; }
+      if (radius <= 0)     { setInfo('Радиус поиска должен быть > 0', 'info-err'); return; }
 
       const payload = JSON.stringify({
-        layerIdx:   parseInt(layerIdx),
+        layerIdx:   layerIdx,
         radius:     radius,
         separator:  sep,
-        mFactor:    mVal,
-        mmFactor:   mmVal,
-        storyIdx:   parseInt(storyIdx),
+        mFactor:    1,
+        mmFactor:   1000,
+        storyIdx:   isNaN(storyIdx) ? 0 : storyIdx,
         bboxOffset: bboxOffset,
         meshName:   meshName,
-        meshLayer:  parseInt(meshLayer)
+        meshLayer:  isNaN(meshLayer) ? 0 : meshLayer
       });
 
       setInfo('Создание Mesh...');
+      $('btnCreate').disabled = true;
+
       try {
         const ok = await fn(payload);
-        setInfo(ok ? 'Mesh создан успешно!' : 'Не удалось создать Mesh.');
+        setInfo(ok ? 'Mesh создан успешно!' : 'Не удалось создать Mesh. Проверьте слой и параметры.', ok ? 'info-ok' : 'info-err');
       } catch(e) {
-        setInfo('Ошибка: ' + e);
+        setInfo('Ошибка: ' + e, 'info-err');
+      } finally {
+        $('btnCreate').disabled = false;
       }
     }
 
-    // ── Инициализация ─────────────────────────────────────────────────────────
-    window.addEventListener('load', function() {
-      loadLayers();
-      loadStories();
-      document.getElementById('sepInput').addEventListener('input', updateParse);
-      document.getElementById('mInput').addEventListener('input', recalcResult);
-      document.getElementById('mmInput').addEventListener('input', recalcResult);
-      document.getElementById('layerSelect').addEventListener('change', loadSampleText);
-    });
+    window.addEventListener('load', init);
   </script>
 </head>
 <body>
-  <div class="palette">
-    <h1>Topo Mesh из DWG</h1>
+  <h1>Топо Mesh из DWG</h1>
 
-    <!-- ИСТОЧНИК -->
-    <div class="section">
-      <div class="section-title">Источник</div>
-      <div class="form-row">
-        <label for="layerSelect">Слой отметок:</label>
-        <select id="layerSelect"></select>
-      </div>
-      <div class="form-row">
-        <label for="searchRadius">Радиус поиска текста (мм):</label>
-        <input type="number" id="searchRadius" value="3000" min="1" step="100">
-      </div>
+  <!-- ── Источник ── -->
+  <div class="section">
+    <div class="section-title">Источник</div>
+    <div class="form-row">
+      <label for="layerSelect">Слой с отметками:</label>
+      <select id="layerSelect" onchange="onLayerChange()"></select>
     </div>
-
-    <div class="divider"></div>
-
-    <!-- ПАРСИНГ -->
-    <div class="section">
-      <div class="section-title">Формат отметки</div>
-      <div class="parse-example" id="sampleText">— выберите слой —</div>
-      <div class="parse-row">
-        <input type="number" id="mInput" value="0" step="1">
-        <span class="parse-sep">м</span>
-        <input type="text"   id="sepInput" value="." maxlength="1">
-        <input type="number" id="mmInput" value="0" step="1" min="0" max="999">
-        <span class="parse-sep">мм</span>
-        <span class="parse-result" id="parseResult">= 0 мм</span>
-      </div>
+    <div class="form-row">
+      <label for="radius">Радиус поиска текста (мм):</label>
+      <input type="number" id="radius" value="3000" min="1" step="100">
     </div>
-
-    <div class="divider"></div>
-
-    <!-- РЕЗУЛЬТАТ -->
-    <div class="section">
-      <div class="section-title">Параметры Mesh</div>
-      <div class="form-row">
-        <label for="storySelect">Этаж:</label>
-        <select id="storySelect"></select>
-      </div>
-      <div class="form-row">
-        <label for="bboxOffset">Отступ границы (мм):</label>
-        <input type="number" id="bboxOffset" value="1000" min="0" step="100">
-      </div>
-      <div class="form-row">
-        <label for="meshName">Имя элемента:</label>
-        <input type="text" id="meshName" value="TopoMesh">
-      </div>
-      <div class="form-row">
-        <label for="meshLayerSelect">Слой Mesh:</label>
-        <select id="meshLayerSelect"></select>
-      </div>
-      <button class="button-flat button-full button-primary" style="margin-top:10px;" onclick="createTopoMesh()">
-        Создать Topo Mesh
-      </button>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- СТАТУС -->
-    <div class="section">
-      <div id="info-box" class="info-box">Выберите слой с отметками высоты.</div>
-      <div class="controls-row">
-        <button class="button-flat button-inline" onclick="loadLayers(); loadStories(); setInfo('Обновлено.');">Обновить</button>
-      </div>
-    </div>
-
+    <button class="btn" onclick="loadSample()" style="margin-top:3px;">
+      Загрузить пример с слоя
+    </button>
   </div>
+
+  <div class="divider"></div>
+
+  <!-- ── Парсинг ── -->
+  <div class="section">
+    <div class="section-title">Парсинг формата</div>
+    <div class="form-row">
+      <label>Пример текста:</label>
+      <span id="sampleRaw" class="preview-box">(нажмите «Загрузить»)</span>
+    </div>
+    <div class="form-row">
+      <label>Разделитель:</label>
+      <div class="sep-group">
+        <label><input type="radio" name="sep" value="." checked onchange="onSepChange()"> точка &nbsp;<code>14.200</code></label>
+        <label><input type="radio" name="sep" value="," onchange="onSepChange()"> запятая &nbsp;<code>14,200</code></label>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Результат:</label>
+      <span id="sampleResult" style="flex:1; font-size:12px;"></span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── Параметры Mesh ── -->
+  <div class="section">
+    <div class="section-title">Параметры Mesh</div>
+    <div class="form-row">
+      <label for="storySelect">Этаж (reference plane):</label>
+      <select id="storySelect"></select>
+    </div>
+    <div class="form-row">
+      <label for="meshLayerSelect">Слой для Mesh:</label>
+      <select id="meshLayerSelect"></select>
+    </div>
+    <div class="form-row">
+      <label for="bboxOffset">Отступ контура (мм):</label>
+      <input type="number" id="bboxOffset" value="1000" min="0" step="100">
+    </div>
+    <div class="form-row">
+      <label for="meshName">Имя элемента:</label>
+      <input type="text" id="meshName" value="TopoMesh" maxlength="64">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── Создать ── -->
+  <div class="section">
+    <button id="btnCreate" class="btn btn-primary" onclick="createTopoMesh()">
+      Создать Topo Mesh
+    </button>
+  </div>
+
+  <!-- ── Статус ── -->
+  <div id="infoBox" class="info-box">
+    Выберите слой, загрузите пример, проверьте парсинг и нажмите «Создать».
+  </div>
+
 </body>
 </html>

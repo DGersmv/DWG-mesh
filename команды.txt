@@ -1,0 +1,112 @@
+cmake -S . -B build -DAC_API_DEVKIT_DIR="D:/API Development Kit 27.6003" -DAC_ADDON_LANGUAGE=INT
+cmake -S . -B build -DAC_API_DEVKIT_DIR="D:/API Development Kit 27.6003"
+cmake --build build --config Release --target AddOnResources
+cmake --build build --config Release
+
+cmake -S . -B build -DAC_API_DEVKIT_DIR="C:\Program Files\Graphisoft\API Development Kit 27.6003"
+
+# если ругается на политику — разово на сеанс:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# запуск:
+.\tools\stash-apx.ps1
+# или:
+powershell -ExecutionPolicy Bypass -File ".\tools\stash-apx.ps1"
+
+git status
+# должен увидеть new file: build/releases/LandscapeHelper-Debug-20250917-a77b37a.apx
+
+git add build/releases/LandscapeHelper-Debug-20250917-a77b37a.apx
+git commit -m "Add APX artifact for main: Debug 2025-09-17 a77b37a"
+git push origin main
+
+
+Шаблон создания элемента в Archicad Add-On (через REPL)
+
+Любой элемент (стена, колонна, плита, объект и пр.) создаётся строго по такой схеме:
+
+1. Подготовка
+API_Element element = {};
+API_ElementMemo memo = {};
+
+2. Установка типа
+element.header.type.typeID = API_WallID;   // или API_ColumnID, API_SlabID и т.д.
+
+3. Загрузка дефолтов
+GSErrCode err = ACAPI_Element_GetDefaults(&element, &memo);
+if (err != NoError) {
+    ACAPI_WriteReport("GetDefaults failed", true);
+    ACAPI_DisposeElemMemoHdls(&memo);
+    return new JS::Value(false);
+}
+
+
+⚠️ Без этого Archicad не знает материалов, этажей, конструктивных настроек → элемент «битый».
+
+4. Изменение параметров
+
+Прописываем то, что хотим изменить (например, для стены):
+
+element.wall.begC = {0.0, 0.0};
+element.wall.endC = {5.0, 0.0};
+element.wall.height    = 3.0;
+element.wall.thickness = 0.3;
+
+5. Создание внутри Undo-команды
+err = ACAPI_CallUndoableCommand("Place Wall", [&]() -> GSErrCode {
+    return ACAPI_Element_Create(&element, &memo);
+});
+
+
+⚠️ Без ACAPI_CallUndoableCommand Archicad может просто не создать элемент.
+
+6. Логирование результата
+if (err != NoError) {
+    GS::UniString msg;
+    msg.Printf("ACAPI_Element_Create failed, err=%d", err);
+    ACAPI_WriteReport(msg.ToCStr().Get(), true);
+} else {
+    ACAPI_WriteReport("Element created successfully", false);
+}
+
+7. Очистка памяти
+ACAPI_DisposeElemMemoHdls(&memo);
+
+✅ Универсальная функция для REPL
+jsACAPI->AddItem(new JS::Function("CreateWall", [](GS::Ref<JS::Base>) {
+    API_Element element = {};
+    API_ElementMemo memo = {};
+
+    element.header.type.typeID = API_WallID;
+    GSErrCode err = ACAPI_Element_GetDefaults(&element, &memo);
+    if (err != NoError) {
+        ACAPI_WriteReport("GetDefaults failed", true);
+        ACAPI_DisposeElemMemoHdls(&memo);
+        return new JS::Value(false);
+    }
+
+    element.wall.begC = {0.0, 0.0};
+    element.wall.endC = {5.0, 0.0};
+    element.wall.height    = 3.0;
+    element.wall.thickness = 0.3;
+
+    err = ACAPI_CallUndoableCommand("Place Wall", [&]() -> GSErrCode {
+        return ACAPI_Element_Create(&element, &memo);
+    });
+
+    if (err != NoError) {
+        GS::UniString msg;
+        msg.Printf("CreateWall failed, err=%d", err);
+        ACAPI_WriteReport(msg.ToCStr().Get(), true);
+    } else {
+        ACAPI_WriteReport("Wall created successfully", false);
+    }
+
+    ACAPI_DisposeElemMemoHdls(&memo);
+    return new JS::Value(err == NoError);
+}));
+
+
+⚡ Этот шаблон копируешь → меняешь API_WallID на нужный тип + параметры элемента → и у тебя из REPL создаётся любой объект.
+
+Хочешь, я сразу сделаю заготовки для CreateColumn, CreateSlab, CreateObject, чтобы ты мог проверить все основные элементы?

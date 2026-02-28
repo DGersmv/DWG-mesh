@@ -181,7 +181,7 @@ if (WIN32)
 	#    Release → LandscapeHelper_AC27
 	set_target_properties (AddOn PROPERTIES
 		OUTPUT_NAME_DEBUG         "${AC_ADDON_NAME}"
-		OUTPUT_NAME_RELEASE       "LandscapeHelper_AC27"
+		OUTPUT_NAME_RELEASE       "DWG-mesh"
 		OUTPUT_NAME_RELWITHDEBINFO "${AC_ADDON_NAME}"
 		SUFFIX ".apx"
 	)
@@ -191,10 +191,10 @@ if (WIN32)
 		PDB_OUTPUT_DIRECTORY             "${CMAKE_SOURCE_DIR}/ToArchicad/$<CONFIG>"
 		COMPILE_PDB_OUTPUT_DIRECTORY     "${CMAKE_SOURCE_DIR}/ToArchicad/$<CONFIG>"
 		PDB_NAME_DEBUG                   "${AC_ADDON_NAME}"
-		PDB_NAME_RELEASE                 "LandscapeHelper_AC27"
+		PDB_NAME_RELEASE                 "DWG-mesh"
 		PDB_NAME_RELWITHDEBINFO          "${AC_ADDON_NAME}"
 		COMPILE_PDB_NAME_DEBUG           "${AC_ADDON_NAME}"
-		COMPILE_PDB_NAME_RELEASE         "LandscapeHelper_AC27"
+		COMPILE_PDB_NAME_RELEASE         "DWG-mesh"
 		COMPILE_PDB_NAME_RELWITHDEBINFO  "${AC_ADDON_NAME}"
 	)
 else ()

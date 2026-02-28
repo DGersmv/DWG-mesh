@@ -2,7 +2,7 @@
 // Resource description
 // ****************************************************************************/
 
-#include "Browser_Repl.grc.rc2"
-#include "Browser_ReplFix.grc.rc2"
+#include "DWG-mesh.grc.rc2"
+#include "DWG-meshFix.grc.rc2"
 
 1	ICON    LOADONCALL MOVEABLE IMPURE  ACAP.ico
