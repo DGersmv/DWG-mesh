@@ -269,10 +269,9 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 	}
 	minX -= offM; minY -= offM; maxX += offM; maxY += offM;
 
-	const Int32 nC   = 4;
-	const Int32 nCC  = nC + 1;           // контур + замыкающая
+	const Int32 nC   = 4;                    // число углов контура
 	const Int32 nTP  = (Int32)pts.size();
-	const Int32 nTot = nCC + nTP;
+	const Int32 nTot = nC + nTP;             // всего записей в coords/meshPolyZ
 
 	API_Element     elem = {};
 	API_ElementMemo memo = {};
@@ -287,12 +286,19 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		return err;
 	}
 
-	// Слой и этаж — по образцу LayerHelper/GroundHelper
+	// Слой, этаж и имя
 	elem.header.layer    = GetLayerAttrIdx(p.meshLayerIdx);
 	elem.header.floorInd = (short)p.storyIdx;
+	// заполнение поля elemID на случай, если имя передано
+	if (!p.meshName.IsEmpty()) {
+		// GS::ucscpy работает с uchar_t*, длина ограничена MAXPATHL или 63
+		GS::ucscpy((GS::uchar_t*)elem.mesh.head.elemID.elemIDStr,
+			p.meshName.ToUStr().Get());
+	}
 
+	// параметры полигона – число вершин контура, sub‑polys всегда 1
 	elem.mesh.level          = minZ - storyElevM;
-	elem.mesh.poly.nCoords   = nCC;
+	elem.mesh.poly.nCoords   = nC;
 	elem.mesh.poly.nSubPolys = 1;
 	elem.mesh.poly.nArcs     = 0;
 
@@ -311,31 +317,42 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 	const double cx[4] = { minX, maxX, maxX, minX };
 	const double cy[4] = { minY, minY, maxY, maxY };
 
+	// Вставляем контурные углы (индексы 1..nC)
 	for (Int32 i = 0; i < nC; ++i) {
-		(*memo.coords)   [i+1].x = cx[i];
-		(*memo.coords)   [i+1].y = cy[i];
+		(*memo.coords)[i+1].x    = cx[i];
+		(*memo.coords)[i+1].y    = cy[i];
 		(*memo.meshPolyZ)[i+1]   = cZ;
 	}
-	// Замыкающая точка контура
-	(*memo.coords)   [nC+1] = (*memo.coords)[1];
-	(*memo.meshPolyZ)[nC+1] = cZ;
 
-	// Топо точки (внутренние)
+	// Внутренние топо-точки идут сразу после контура (индексы nC+1..nTotal)
 	for (Int32 i = 0; i < nTP; ++i) {
-		const Int32 idx = nCC + i + 1;
-		(*memo.coords)   [idx].x = pts[i].x;
-		(*memo.coords)   [idx].y = pts[i].y;
+		const Int32 idx = nC + i + 1;
+		(*memo.coords)[idx].x    = pts[i].x;
+		(*memo.coords)[idx].y    = pts[i].y;
 		(*memo.meshPolyZ)[idx]   = pts[i].z - storyElevM;
 	}
 
+	// один полигональный контур: старт в 0, длина = число углов (без дублирования первой точки)
 	(*memo.pends)[0] = 0;
-	(*memo.pends)[1] = nCC;
+	(*memo.pends)[1] = nC;
 
 	err = ACAPI_Element_Create(&elem, &memo);
 	ACAPI_DisposeElemMemoHdls(&memo);
 
-	if (err != NoError) ACAPI_WriteReport("[TopoMesh] Create failed: %d", false, (int)err);
-	else                ACAPI_WriteReport("[TopoMesh] Mesh создан (%d точек)", false, nTP);
+	if (err != NoError) {
+		ACAPI_WriteReport("[TopoMesh] Create failed: %d", false, (int)err);
+		// dump a few diagnostics to help spot bad values
+		ACAPI_WriteReport("[TopoMesh] nCoords=%d, pends=[%d,%d]", false,
+			elem.mesh.poly.nCoords,
+			(*memo.pends)[0], (*memo.pends)[1]);
+		if (memo.coords) {
+			ACAPI_WriteReport("[TopoMesh] first coord (x,y,z) = %.3f,%.3f,%.3f", false,
+				(*memo.coords)[1].x, (*memo.coords)[1].y, (*memo.coords)[1].z);
+		}
+	}
+	else {
+		ACAPI_WriteReport("[TopoMesh] Mesh создан (%d точек)", false, nTP);
+	}
 	return err;
 }
 
@@ -496,7 +513,9 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 
 	GSErrCode err = BuildMesh(topo, params, storyElevM);
 	if (err != NoError) {
-		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d", false, (int)err);
+		char errName[256] = {0};
+		ErrID_To_Name(err, errName);
+		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d (%s)", false, (int)err, errName);
 	}
 	return err == NoError;
 }
