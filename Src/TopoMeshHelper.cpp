@@ -425,6 +425,29 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	TopoParams params = {};
 	if (!ParseTopoParams(jsonPayload, params)) return false;
 
+	// diagnostics
+	GS::UInt32 layerCount = 0;
+	ACAPI_Attribute_GetNum(API_LayerID, layerCount);
+	ACAPI_WriteReport("[TopoMesh] Параметры: srcIdx=%d dstIdx=%d radius=%.0f sep=%c story=%d bbox=%.0f meshLayerCount=%u meshName='%s'",
+		false,
+		params.layerIdx,
+		params.meshLayerIdx,
+		params.radiusMm,
+		params.separator,
+		params.storyIdx,
+		params.bboxOffsetMm,
+		(layerCount),
+		params.meshName.ToCStr().Get());
+
+	if (params.layerIdx < 0 || params.layerIdx >= (Int32)layerCount) {
+		ACAPI_WriteReport("[TopoMesh] Неверный исходный слой %d", false, params.layerIdx);
+		return false;
+	}
+	if (params.meshLayerIdx < 0 || params.meshLayerIdx >= (Int32)layerCount) {
+		ACAPI_WriteReport("[TopoMesh] Неверный слой для Mesh %d", false, params.meshLayerIdx);
+		return false;
+	}
+
 	API_AttributeIndex layerAttrIdx = GetLayerAttrIdx(params.layerIdx);
 
 	std::vector<ArcPoint> arcs;
@@ -440,7 +463,11 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	if (topo.size() < 3) { ACAPI_WriteReport("[TopoMesh] Мало точек", false); return false; }
 
 	const double storyElevM = GetStoryElevM(params.storyIdx);
-	return BuildMesh(topo, params, storyElevM) == NoError;
+	GSErrCode err = BuildMesh(topo, params, storyElevM);
+	if (err != NoError) {
+		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d", false, (int)err);
+	}
+	return err == NoError;
 }
 
 }
