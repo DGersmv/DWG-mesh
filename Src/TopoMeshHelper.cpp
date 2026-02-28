@@ -448,6 +448,18 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 		return false;
 	}
 
+	// if no story specified, select the first available one (avoid floorInd=0)
+	if (params.storyIdx <= 0) {
+		API_StoryInfo si = {};
+		if (ACAPI_ProjectSetting_GetStorySettings(&si) == NoError && si.data != nullptr) {
+			if (BMGetHandleSize((GSHandle)si.data) >= sizeof(API_StoryType)) {
+				params.storyIdx = (*si.data)[0].index;
+			}
+			BMKillHandle((GSHandle*)&si.data);
+		}
+		ACAPI_WriteReport("[TopoMesh] Story unspecified, using %d", false, params.storyIdx);
+	}
+
 	API_AttributeIndex layerAttrIdx = GetLayerAttrIdx(params.layerIdx);
 
 	std::vector<ArcPoint> arcs;
@@ -463,6 +475,13 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	if (topo.size() < 3) { ACAPI_WriteReport("[TopoMesh] Мало точек", false); return false; }
 
 	const double storyElevM = GetStoryElevM(params.storyIdx);
+
+	// debug: print element header values we'll use
+	ACAPI_WriteReport("[TopoMesh] will create mesh on layer attr %d, floorInd %d, elevM %.3f", false,
+		(int)GetLayerAttrIdx(params.meshLayerIdx).index,
+		(int)params.storyIdx,
+		storyElevM);
+
 	GSErrCode err = BuildMesh(topo, params, storyElevM);
 	if (err != NoError) {
 		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d", false, (int)err);
