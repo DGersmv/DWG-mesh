@@ -1,0 +1,24 @@
+/* *****************************************************************************
+// Localizable resource description
+// ****************************************************************************/
+
+'STR#' 32000 "Add-On Name and Description" {
+/* [  1] */		"DWG Mesh AC27"
+/* [  2] */		"DWG Topo Mesh V1.0"
+}
+
+'STR#' 32501 "Strings for the Menu" {
+/* [   ] */		"227.info"
+/* [   ] */		"DWG Mesh"
+/* [  1] */		"Топо Mesh из DWG"
+}
+
+/* --- Dockable browser palette: TOPO MESH -----------------------------------*/
+
+'GDLG'  32500    Palette | topCaption | close | grow   0   0  360  480  "Topo Mesh"  {
+/* [  1] */ Browser         0   0  360  480
+}
+
+'DLGH'  32500  DLG_32500_TopoMesh_Browser {
+1   "Topo Mesh Browser Control"     Browser_0
+}

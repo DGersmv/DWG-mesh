@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <g stroke="#346233" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Таблица / CSV -->
+    <rect x="3" y="4" width="11" height="16" rx="1.5" />
+    <!-- Вертикальные линии -->
+    <path d="M7 4v16" />
+    <path d="M11 4v16" />
+    <!-- Горизонтальные линии -->
+    <path d="M3 9h11" />
+    <path d="M3 13h11" />
+    <path d="M3 17h11" />
+
+    <!-- Стрелка экспорта -->
+    <path d="M15 12h6" />
+    <path d="M18.5 8.5L21 12l-2.5 3.5" />
+  </g>
+</svg>
