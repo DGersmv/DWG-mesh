@@ -127,27 +127,41 @@
     }
 
     async function populateLayers() {
-      const fn = ensureACAPI('GetLayerList');
-      if (!fn) { setInfo('ACAPI недоступен', 'info-err'); return; }
-      try {
-        const json = await fn();
-        const layers = JSON.parse(json);
-        fillSelect('layerSelect',     layers, l => l.index, l => l.name);
-        fillSelect('meshLayerSelect', layers, l => l.index, l => l.name);
-      } catch(e) {
-        setInfo('Ошибка загрузки слоёв: ' + e, 'info-err');
-      }
-    }
+  const fn = ensureACAPI('GetLayerList');
+  if (!fn) { setInfo('ACAPI недоступен', 'info-err'); return; }
 
-    async function populateStories() {
-      const fn = ensureACAPI('GetStoryList');
-      if (!fn) return;
-      try {
-        const json = await fn();
-        const stories = JSON.parse(json);
-        fillSelect('storySelect', stories, s => s.index, s => s.name);
-      } catch(e) { /* тихо */ }
-    }
+  try {
+    const layersData = await fn(); // [ [name, layerIndex], ... ]
+    if (!Array.isArray(layersData)) throw new Error('GetLayerList вернул не массив');
+
+    const layers = layersData
+      .filter(it => Array.isArray(it) && it.length >= 2)
+      .map(it => ({ name: String(it[0] ?? ''), index: Number(it[1]) }))
+      .filter(x => x.name.length > 0 && !Number.isNaN(x.index));
+
+    fillSelect('layerSelect',     layers, l => l.index, l => l.name);
+    fillSelect('meshLayerSelect', layers, l => l.index, l => l.name);
+  } catch(e) {
+    setInfo('Ошибка загрузки слоёв: ' + e, 'info-err');
+  }
+}
+
+async function populateStories() {
+  const fn = ensureACAPI('GetStoryList');
+  if (!fn) return;
+
+  try {
+    const storiesData = await fn(); // [ [name, storyIndex], ... ]
+    if (!Array.isArray(storiesData)) return;
+
+    const stories = storiesData
+      .filter(it => Array.isArray(it) && it.length >= 2)
+      .map(it => ({ name: String(it[0] ?? ''), index: Number(it[1]) }))
+      .filter(x => x.name.length > 0 && !Number.isNaN(x.index));
+
+    fillSelect('storySelect', stories, s => s.index, s => s.name);
+  } catch(e) { /* тихо */ }
+}
 
     function fillSelect(id, items, valFn, textFn) {
       const sel = $(id);

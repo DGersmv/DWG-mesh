@@ -1,0 +1,22 @@
+^C:\PROGRAM FILES\GRAPHISOFT\API DEVELOPMENT KIT 27.6003\EXAMPLES\DWG-MESH\BUILD\CMAKEFILES\1726F4B8D182D71A11971C5535C50086\ADDONRESOURCES.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects"
+if %errorlevel% neq 0 goto :cmEnd
+python "C:/Program Files/Graphisoft/API Development Kit 27.6003/Support/Tools/CompileResources.py" INT "C:/Program Files/Graphisoft/API Development Kit 27.6003" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Src" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/DWG-mesh.res"
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/AddOnResources.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\PROGRAM FILES\GRAPHISOFT\API DEVELOPMENT KIT 27.6003\EXAMPLES\DWG-MESH\BUILD\CMAKEFILES\6CF994C8928344A7D71CC9F028A59918\ADDONRESOURCES.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -5,6 +5,9 @@
 #include "ACAPinc.h"
 #include "DGBrowser.hpp"
 
+#include "Array.hpp"
+#include "Pair.hpp"
+
 #include <cstdio>
 
 // =============================================================================
@@ -32,7 +35,6 @@ static GS::UniString LoadTopoMeshHtml ()
 
 // =============================================================================
 // Утилиты для извлечения параметров из JS::Base
-// По образцу BrowserRepl.cpp (JS::Value)
 // =============================================================================
 
 static GS::UniString GetStringFromJs (GS::Ref<JS::Base> p)
@@ -80,21 +82,51 @@ static void RegisterTopoMeshJSObject (DG::Browser& browser)
 {
 	JS::Object* jsACAPI = new JS::Object ("ACAPI");
 
-	// ACAPI.GetLayerList() -> JSON string
+	// -------------------------------------------------------------------------
+	// ACAPI.GetLayerList() -> JS Array: [ [name, layerIndex], ... ]
+	// (layerIndex = реальный индекс слоя Archicad)
+	// -------------------------------------------------------------------------
 	jsACAPI->AddItem (new JS::Function ("GetLayerList",
 		[] (GS::Ref<JS::Base>) -> GS::Ref<JS::Base> {
-			const GS::UniString json = TopoMeshHelper::GetLayerListJson ();
-			return new JS::Value (json);
+
+			GS::Array<GS::Pair<GS::UniString, Int32>> layers;
+			TopoMeshHelper::GetLayerList (layers);
+
+			JS::Array* arr = new JS::Array ();
+			for (const auto& it : layers) {
+				JS::Array* row = new JS::Array ();
+				row->AddItem (new JS::Value (it.first));                       // name
+				row->AddItem (new JS::Value (static_cast<double> (it.second))); // layerIndex
+				arr->AddItem (row);
+			}
+
+			return arr;
 		}));
 
-	// ACAPI.GetStoryList() -> JSON string
+	// -------------------------------------------------------------------------
+	// ACAPI.GetStoryList() -> JS Array: [ [name, storyIndex], ... ]
+	// -------------------------------------------------------------------------
 	jsACAPI->AddItem (new JS::Function ("GetStoryList",
 		[] (GS::Ref<JS::Base>) -> GS::Ref<JS::Base> {
-			const GS::UniString json = TopoMeshHelper::GetStoryListJson ();
-			return new JS::Value (json);
+
+			GS::Array<GS::Pair<GS::UniString, Int32>> stories;
+			TopoMeshHelper::GetStoryList (stories);
+
+			JS::Array* arr = new JS::Array ();
+			for (const auto& it : stories) {
+				JS::Array* row = new JS::Array ();
+				row->AddItem (new JS::Value (it.first));                        // name
+				row->AddItem (new JS::Value (static_cast<double> (it.second)));  // storyIndex
+				arr->AddItem (row);
+			}
+
+			return arr;
 		}));
 
+	// -------------------------------------------------------------------------
 	// ACAPI.GetSampleElevationText(layerIdx) -> string
+	// layerIdx = индекс слоя (то, что придёт из select.value)
+	// -------------------------------------------------------------------------
 	jsACAPI->AddItem (new JS::Function ("GetSampleElevationText",
 		[] (GS::Ref<JS::Base> param) -> GS::Ref<JS::Base> {
 			const Int32 layerIdx = GetIntFromJs (param, 0);
@@ -102,7 +134,9 @@ static void RegisterTopoMeshJSObject (DG::Browser& browser)
 			return new JS::Value (sample);
 		}));
 
+	// -------------------------------------------------------------------------
 	// ACAPI.CreateTopoMesh(jsonPayload) -> bool
+	// -------------------------------------------------------------------------
 	jsACAPI->AddItem (new JS::Function ("CreateTopoMesh",
 		[] (GS::Ref<JS::Base> param) -> GS::Ref<JS::Base> {
 			const GS::UniString payload = GetStringFromJs (param);

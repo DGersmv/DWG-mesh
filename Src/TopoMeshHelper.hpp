@@ -1,30 +1,23 @@
 #pragma once
 
 #include "UniString.hpp"
+#include "Array.hpp"
+#include "Pair.hpp"
 
 namespace TopoMeshHelper {
 
-// Возвращает JSON строку: [{"name":"Слой 1","index":1}, ...]
-GS::UniString GetLayerListJson();
+// Возвращает список слоёв: [("Layer name", index), ...]
+void GetLayerList (GS::Array<GS::Pair<GS::UniString, Int32>>& out);
 
-// Возвращает JSON строку: [{"name":"0. Этаж","index":0}, ...]
-GS::UniString GetStoryListJson();
+// Возвращает список этажей: [("Story name", index), ...]
+void GetStoryList (GS::Array<GS::Pair<GS::UniString, Int32>>& out);
 
-// Возвращает первый текст с указанного слоя (для preview парсинга)
-GS::UniString GetSampleElevationText(Int32 layerIdx);
+// (можешь оставить, если уже используешь где-то)
+GS::UniString GetLayerListJson ();
+GS::UniString GetStoryListJson ();
 
-// Создаёт Mesh из DWG топо данных
-// jsonPayload: {
-//   "layerIdx":     int,      // слой с точками (Arc/Circle + Text)
-//   "radius":       double,   // радиус поиска текста (мм)
-//   "separator":    string,   // "." или ","
-//   "mFactor":      int,      // множитель метров (обычно 1)
-//   "mmFactor":     int,      // множитель мм (обычно 1000)
-//   "storyIdx":     int,      // индекс этажа (reference plane)
-//   "bboxOffset":   double,   // отступ bounding box (мм)
-//   "meshName":     string,   // имя элемента
-//   "meshLayer":    int       // индекс слоя для Mesh
-// }
-bool CreateTopoMesh(const GS::UniString& jsonPayload);
+GS::UniString GetSampleElevationText (Int32 layerIdx);
+
+bool CreateTopoMesh (const GS::UniString& jsonPayload);
 
 } // namespace TopoMeshHelper

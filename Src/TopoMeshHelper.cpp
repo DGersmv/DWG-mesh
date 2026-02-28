@@ -1,5 +1,6 @@
 #include "TopoMeshHelper.hpp"
 
+
 #include "APIEnvir.h"
 #include "ACAPinc.h"
 
@@ -442,4 +443,40 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	return BuildMesh(topo, params, storyElevM) == NoError;
 }
 
-} // namespace TopoMeshHelper
+}
+
+namespace TopoMeshHelper {
+
+	void GetLayerList (GS::Array<GS::Pair<GS::UniString, Int32>>& outLayers)
+	{
+		outLayers.Clear ();
+	
+		const short n = ACAPI_Attribute_GetNum (API_LayerID);
+		for (short i = 1; i <= n; ++i) {
+			API_Attribute attr = {};
+			attr.header.typeID = API_LayerID;
+			attr.header.index  = i;
+	
+			if (ACAPI_Attribute_Get (&attr) == NoError) {
+				outLayers.Push (GS::Pair<GS::UniString, Int32> (attr.header.name, attr.header.index));
+			}
+		}
+	}
+	
+	void GetStoryList (GS::Array<GS::Pair<GS::UniString, Int32>>& outStories)
+	{
+		outStories.Clear ();
+	
+		API_StoryInfo storyInfo = {};
+		if (ACAPI_Environment (APIEnv_GetStorySettingsID, &storyInfo, nullptr) != NoError)
+			return;
+	
+		for (Int32 i = 0; i < storyInfo.data.nStories; ++i) {
+			const API_StoryType& st = storyInfo.data.storyLevels[i];
+			outStories.Push (GS::Pair<GS::UniString, Int32> (st.name, st.index));
+		}
+	
+		BMKillHandle ((GSHandle*) &storyInfo.data.storyLevels);
+	}
+	
+	} // namespace TopoMeshHelper

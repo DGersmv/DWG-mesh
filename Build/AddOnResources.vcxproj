@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{EBE8D251-FAA2-37D9-879E-4B56C7905184}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>AddOnResources</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\CMakeFiles\1726f4b8d182d71a11971c5535c50086\AddOnResources.stamp.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling resources...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects"
+if %errorlevel% neq 0 goto :cmEnd
+python "C:/Program Files/Graphisoft/API Development Kit 27.6003/Support/Tools/CompileResources.py" INT "C:/Program Files/Graphisoft/API Development Kit 27.6003" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Src" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/DWG-mesh.res"
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/AddOnResources.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX.win\DWG-mesh.rc2;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\DWG-meshFix.grc;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RINT\DWG-mesh.grc;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\CSV_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Close_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Contour_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Dims_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Land_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Layers_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Random_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\RotSurf_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Rotate_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Spline_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Support_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Table_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\TopoMesh_28x28.svg;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\ResourceObjects\AddOnResources.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling resources...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects"
+if %errorlevel% neq 0 goto :cmEnd
+python "C:/Program Files/Graphisoft/API Development Kit 27.6003/Support/Tools/CompileResources.py" INT "C:/Program Files/Graphisoft/API Development Kit 27.6003" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Src" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/DWG-mesh.res"
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/AddOnResources.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX.win\DWG-mesh.rc2;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\DWG-meshFix.grc;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RINT\DWG-mesh.grc;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\CSV_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Close_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Contour_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Dims_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Land_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Layers_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Random_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\RotSurf_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Rotate_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Spline_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Support_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Table_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\TopoMesh_28x28.svg;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\ResourceObjects\AddOnResources.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Compiling resources...</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects"
+if %errorlevel% neq 0 goto :cmEnd
+python "C:/Program Files/Graphisoft/API Development Kit 27.6003/Support/Tools/CompileResources.py" INT "C:/Program Files/Graphisoft/API Development Kit 27.6003" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Src" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects" "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/DWG-mesh.res"
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch "C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/Build/ResourceObjects/AddOnResources.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX.win\DWG-mesh.rc2;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\DWG-meshFix.grc;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RINT\DWG-mesh.grc;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\CSV_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Close_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Contour_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Dims_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Land_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Layers_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Random_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\RotSurf_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Rotate_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Spline_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Support_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Table_28x28.svg;C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\TopoMesh_28x28.svg;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\ResourceObjects\AddOnResources.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\CMakeFiles\6cf994c8928344a7d71cc9f028a59918\AddOnResources.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\ResourceObjects\AddOnResources.stamp;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\CMakeFiles\AddOnResources</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\ResourceObjects\AddOnResources.stamp;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\CMakeFiles\AddOnResources</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\ResourceObjects\AddOnResources.stamp;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\CMakeFiles\AddOnResources</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX.win\DWG-mesh.rc2">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\DWG-meshFix.grc">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RINT\DWG-mesh.grc">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\CSV_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Close_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Contour_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Dims_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Land_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Layers_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Random_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\RotSurf_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Rotate_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Spline_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Support_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Table_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\TopoMesh_28x28.svg">
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Build\CMakeFiles\AddOnResources">
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

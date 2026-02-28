@@ -1,0 +1,21 @@
+﻿  APICommon.c
+  AddOn.cpp
+  TopoMeshHelper.cpp
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(454,54): error C2660: ACAPI_Attribute_GetNum: функция не принимает 1 аргументов
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Support\Inc\ACAPinc.h(1639,36): message : см. объявление "ACAPI_Attribute_GetNum"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(454,15): error C2737: "<Нет данных>: необходимо инициализировать объект <Нет данных>
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(458,26): error C2679: бинарный "=": не найден оператор, принимающий правый операнд типа "short" (или приемлемое преобразование отсутствует)
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Support\Inc\APIdefs_AttributeIndex.hpp(72,1): message : может быть "API_AttributeIndex &API_AttributeIndex::operator =(API_AttributeIndex &&)"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Support\Inc\APIdefs_AttributeIndex.hpp(72,1): message : или       "API_AttributeIndex &API_AttributeIndex::operator =(const API_AttributeIndex &)"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(458,26): message : при попытке сопоставить список аргументов "(API_AttributeIndex, short)"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(461,88): error C2440: <function-style-cast>: невозможно преобразовать "initializer list" в "GS::Pair<GS::UniString,GS::Int32>"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(461,88): message : Ни один конструктор не смог принять исходный тип, либо разрешение перегрузки конструктора неоднозначно
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(471,7): error C3861: ACAPI_Environment: идентификатор не найден
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(475,28): error C2530: st: ссылки должны быть инициализированы
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(476,56): error C2039: "name": не является членом "API_StoryType".
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Support\Inc\APIdefs_Environment.h(1293): message : см. объявление "API_StoryType"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(476,70): error C2440: <function-style-cast>: невозможно преобразовать "const short" в "GS::Pair<GS::UniString,GS::Int32>"
+C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(476,70): message : Ни один конструктор не смог принять исходный тип, либо разрешение перегрузки конструктора неоднозначно
+  TopoMeshPalette.cpp
+  UserItemDialog.cpp
+  Создание кода...
