@@ -451,14 +451,24 @@ namespace TopoMeshHelper {
 	{
 		outLayers.Clear ();
 	
-		const short n = ACAPI_Attribute_GetNum (API_LayerID);
-		for (short i = 1; i <= n; ++i) {
+		// new ACAPI_Attribute_GetNum signature takes typeID and reference
+		GS::UInt32 layerCount = 0;
+		if (ACAPI_Attribute_GetNum(API_LayerID, layerCount) != NoError || layerCount == 0)
+			return;
+	
+		for (GS::UInt32 i = 1; i <= layerCount; ++i) {
 			API_Attribute attr = {};
 			attr.header.typeID = API_LayerID;
-			attr.header.index  = i;
+			// Attribute index must be created using the helper function
+			attr.header.index  = ACAPI_CreateAttributeIndex((short)i);
 	
-			if (ACAPI_Attribute_Get (&attr) == NoError) {
-				outLayers.Push (GS::Pair<GS::UniString, Int32> (attr.header.name, attr.header.index));
+			if (ACAPI_Attribute_Get(&attr) == NoError) {
+				// i already represents the real attribute index used to construct
+				// attr.header.index, so it can be pushed directly.
+				outLayers.Push(GS::Pair<GS::UniString, Int32>{
+					attr.header.name,
+					(Int32)i
+				});
 			}
 		}
 	}
@@ -467,16 +477,23 @@ namespace TopoMeshHelper {
 	{
 		outStories.Clear ();
 	
-		API_StoryInfo storyInfo = {};
-		if (ACAPI_Environment (APIEnv_GetStorySettingsID, &storyInfo, nullptr) != NoError)
+		// use the same mechanism as JSON helper to stay in sync with
+		// the current API (ProjectSetting_GetStorySettings)
+		API_StoryInfo si = {};
+		if (ACAPI_ProjectSetting_GetStorySettings(&si) != NoError)
+			return;
+		if (si.data == nullptr)
 			return;
 	
-		for (Int32 i = 0; i < storyInfo.data.nStories; ++i) {
-			const API_StoryType& st = storyInfo.data.storyLevels[i];
-			outStories.Push (GS::Pair<GS::UniString, Int32> (st.name, st.index));
+		const Int32 cnt = (Int32)(BMGetHandleSize((GSHandle)si.data) / sizeof(API_StoryType));
+		for (Int32 i = 0; i < cnt; ++i) {
+			const API_StoryType& st = (*si.data)[i];
+			outStories.Push(GS::Pair<GS::UniString, Int32>{
+				GS::UniString(st.uName),
+				(Int32)st.index
+			});
 		}
-	
-		BMKillHandle ((GSHandle*) &storyInfo.data.storyLevels);
+		BMKillHandle((GSHandle*)&si.data);
 	}
 	
 	} // namespace TopoMeshHelper
