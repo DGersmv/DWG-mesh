@@ -121,19 +121,34 @@
 
     // ── Инициализация ────────────────────────────────────────────────────────
 
+    // helper: wait for ACAPI to appear, retrying for a short time
+    function waitForACAPI(maxRetries = 20, interval = 50) {
+      return new Promise((resolve) => {
+        let tries = 0;
+        function check() {
+          const fn = ensureACAPI('GetLayerList');
+          if (fn || tries >= maxRetries) {
+            resolve(fn);
+          } else {
+            tries++;
+            setTimeout(check, interval);
+          }
+        }
+        check();
+      });
+    }
+
     async function init() {
-      // sometimes the ACAPI object arrives slightly after the page load event
-      // (depending on browser timings and registration order).  if we can't
-      // access it right away we'll wait a short moment and try again.
-      const fn = ensureACAPI('GetLayerList');
+      setInfo('Инициализация...', '');
+      const fn = await waitForACAPI();
       if (!fn) {
-        setInfo('ACAPI недоступен, повторная попытка…', 'info-err');
-        setTimeout(init, 100);
+        setInfo('ACAPI недоступен после ожидания', 'info-err');
         return;
       }
 
       await populateLayers();
       await populateStories();
+      setInfo('', '');
     }
 
     async function populateLayers() {
