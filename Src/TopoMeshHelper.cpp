@@ -477,10 +477,18 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	const double storyElevM = GetStoryElevM(params.storyIdx);
 
 	// debug: print element header values we'll use
-	ACAPI_WriteReport("[TopoMesh] will create mesh on layer attr %d, floorInd %d, elevM %.3f", false,
-		(int)GetLayerAttrIdx(params.meshLayerIdx).index,
-		(int)params.storyIdx,
-		storyElevM);
+	// we can't rely on the internal field of API_AttributeIndex (may be opaque)
+	// simply log the pointer-sized data as an integer for diagnostics
+	{
+		API_AttributeIndex idx = GetLayerAttrIdx(params.meshLayerIdx);
+		int raw = 0;
+		static_assert(sizeof(raw) >= sizeof(idx), "raw int too small");
+		std::memcpy(&raw, &idx, sizeof(idx));
+		ACAPI_WriteReport("[TopoMesh] will create mesh on layer attr raw=0x%X, floorInd %d, elevM %.3f", false,
+			raw,
+			(int)params.storyIdx,
+			storyElevM);
+	}
 
 	GSErrCode err = BuildMesh(topo, params, storyElevM);
 	if (err != NoError) {
