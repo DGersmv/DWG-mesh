@@ -67,12 +67,17 @@ set (AC_ADDON_LANGUAGE "INT" CACHE STRING "Add-On language code.")
 message (STATUS "APIDevKit directory: ${AC_API_DEVKIT_DIR}")
 set (ACAPINC_FILE_LOCATION ${AC_API_DEVKIT_DIR}/Support/Inc/ACAPinc.h)
 if (EXISTS ${ACAPINC_FILE_LOCATION})
+	# real SDK found, parse version
 	file (READ ${ACAPINC_FILE_LOCATION} ACAPIncContent)
 	string (REGEX MATCHALL "#define[ \t]+ServerMainVers_([0-9][0-9])" VersionList ${ACAPIncContent})
 	set (ARCHICAD_VERSION ${CMAKE_MATCH_1})
 	message (STATUS "Archicad Version: ${ARCHICAD_VERSION}")
 else ()
-	message (FATAL_ERROR "Failed to detect Archicad version, please check the value of the AC_API_DEVKIT_DIR variable.")
+	message (WARNING "Archicad devkit not found; using stub headers")
+	add_definitions(-DACAPI_STUB)
+	# also set the CMake variable for conditional logic
+	set(ACAPI_STUB 1 CACHE INTERNAL "Build using stub headers")
+	set (ACAPINC_FILE_LOCATION "${CMAKE_CURRENT_LIST_DIR}/Stub/ACAPinc.h")
 endif ()
 
 if (WIN32)
@@ -89,33 +94,35 @@ set (AddOnResourcesFolder .)
 
 # AddOnResources
 
-set (ResourceObjectsDir ${CMAKE_BINARY_DIR}/ResourceObjects)
+if (NOT DEFINED ACAPI_STUB)
+	set (ResourceObjectsDir ${CMAKE_BINARY_DIR}/ResourceObjects)
 
-file (GLOB AddOnImageFiles
-	${AddOnResourcesFolder}/RFIX/Images/*.svg
-)
-if (WIN32)
-	file (GLOB AddOnResourceFiles
-		${AddOnResourcesFolder}/R${AC_ADDON_LANGUAGE}/*.grc
-		${AddOnResourcesFolder}/RFIX/*.grc
-		${AddOnResourcesFolder}/RFIX/*.grc
-		${AddOnResourcesFolder}/RFIX.win/*.rc2
+	file (GLOB AddOnImageFiles
+		${AddOnResourcesFolder}/RFIX/Images/*.svg
 	)
-else ()
-	file (GLOB AddOnResourceFiles
-		${AddOnResourcesFolder}/R${AC_ADDON_LANGUAGE}/*.grc
-		${AddOnResourcesFolder}/RFIX/*.grc
-		${AddOnResourcesFolder}/RFIX.mac/*.plist
-	)
-endif ()
+	if (WIN32)
+		file (GLOB AddOnResourceFiles
+			${AddOnResourcesFolder}/R${AC_ADDON_LANGUAGE}/*.grc
+			${AddOnResourcesFolder}/RFIX/*.grc
+			${AddOnResourcesFolder}/RFIX/*.grc
+			${AddOnResourcesFolder}/RFIX.win/*.rc2
+		)
+	else ()
+		file (GLOB AddOnResourceFiles
+			${AddOnResourcesFolder}/R${AC_ADDON_LANGUAGE}/*.grc
+			${AddOnResourcesFolder}/RFIX/*.grc
+			${AddOnResourcesFolder}/RFIX.mac/*.plist
+		)
+	endif ()
 
-source_group ("Images" FILES ${AddOnImageFiles})
-source_group ("Resources" FILES ${AddOnResourceFiles})
-add_custom_target (
-	AddOnResources ALL
-	DEPENDS "${ResourceObjectsDir}/AddOnResources.stamp"
-	SOURCES ${AddOnResourceFiles} ${AddOnImageFiles}
-)
+	source_group ("Images" FILES ${AddOnImageFiles})
+	source_group ("Resources" FILES ${AddOnResourceFiles})
+	add_custom_target (
+		AddOnResources ALL
+		DEPENDS "${ResourceObjectsDir}/AddOnResources.stamp"
+		SOURCES ${AddOnResourceFiles} ${AddOnImageFiles}
+	)
+endif()
 
 get_filename_component (AddOnSourcesFolderAbsolute "${CMAKE_CURRENT_LIST_DIR}/${AddOnSourcesFolder}" ABSOLUTE)
 get_filename_component (AddOnResourcesFolderAbsolute "${CMAKE_CURRENT_LIST_DIR}/${AddOnResourcesFolder}" ABSOLUTE)
@@ -209,46 +216,58 @@ if (WIN32)
 	target_link_options (AddOn PUBLIC /export:GetExportedFuncAddrs,@1 /export:SetImportedFuncAddrs,@2)
 endif ()
 
-target_include_directories (AddOn PUBLIC
-	${AddOnSourcesFolder}
-	${AC_API_DEVKIT_DIR}/Support/Inc
-)
+if(DEFINED ACAPI_STUB)
+	target_include_directories (AddOn PUBLIC
+		${AddOnSourcesFolder}
+		${CMAKE_CURRENT_LIST_DIR}/Stub
+	)
+	message (STATUS "Building with API stub; no external libraries will be linked")
+else()
+	target_include_directories (AddOn PUBLIC
+		${AddOnSourcesFolder}
+		${AC_API_DEVKIT_DIR}/Support/Inc
+	)
 
-if (WIN32)
-	target_link_libraries (AddOn
-		"${AC_API_DEVKIT_DIR}/Support/Lib/ACAP_STAT.lib"
-	)
-else ()
-	find_library (CocoaFramework Cocoa)
-	target_link_libraries (AddOn
-		"${AC_API_DEVKIT_DIR}/Support/Lib/libACAP_STAT.a"
-		${CocoaFramework}
-	)
-endif ()
+	if (WIN32)
+		target_link_libraries (AddOn
+			"${AC_API_DEVKIT_DIR}/Support/Lib/ACAP_STAT.lib"
+		)
+	else ()
+		find_library (CocoaFramework Cocoa)
+		target_link_libraries (AddOn
+			"${AC_API_DEVKIT_DIR}/Support/Lib/libACAP_STAT.a"
+			${CocoaFramework}
+		)
+	endif ()
+endif()
 
 SetCompilerOptions (AddOn)
-add_dependencies (AddOn AddOnResources)
+if (NOT DEFINED ACAPI_STUB)
+	add_dependencies (AddOn AddOnResources)
+endif()
 
-get_filename_component (APIDevKitModulesDir "${AC_API_DEVKIT_DIR}/Support/Modules" ABSOLUTE)
+if(NOT DEFINED ACAPI_STUB)
+	get_filename_component (APIDevKitModulesDir "${AC_API_DEVKIT_DIR}/Support/Modules" ABSOLUTE)
 
-file (GLOB GSIncludeFolders
-	${APIDevKitModulesDir}/*
-)
-foreach (includeFolder ${GSIncludeFolders})
-	AddGSModuleIncludeFolder (AddOn ${includeFolder})
-endforeach ()
+	file (GLOB GSIncludeFolders
+		${APIDevKitModulesDir}/*
+	)
+	foreach (includeFolder ${GSIncludeFolders})
+		AddGSModuleIncludeFolder (AddOn ${includeFolder})
+	endforeach ()
 
-if (WIN32)
-	set (APIDevKitLinkLibDir "${APIDevKitModulesDir}")
-else ()
-	get_filename_component (APIDevKitLinkLibDir "${AC_API_DEVKIT_DIR}/Support/Frameworks" ABSOLUTE)
-endif ()
+	if (WIN32)
+		set (APIDevKitLinkLibDir "${APIDevKitModulesDir}")
+	else ()
+		get_filename_component (APIDevKitLinkLibDir "${AC_API_DEVKIT_DIR}/Support/Frameworks" ABSOLUTE)
+	endif ()
 
-file (GLOB GSLinkLibFolders
-	${APIDevKitLinkLibDir}/*
-)
-foreach (linkLibFolder ${GSLinkLibFolders})
-	AddGSModuleLinkLibrary (AddOn ${linkLibFolder})
-endforeach ()
+	file (GLOB GSLinkLibFolders
+		${APIDevKitLinkLibDir}/*
+	)
+	foreach (linkLibFolder ${GSLinkLibFolders})
+		AddGSModuleLinkLibrary (AddOn ${linkLibFolder})
+	endforeach ()
+endif()
 
 

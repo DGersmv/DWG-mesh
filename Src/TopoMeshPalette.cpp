@@ -230,10 +230,16 @@ TopoMeshPalette::~TopoMeshPalette ()
 
 void TopoMeshPalette::Init ()
 {
-	LoadHtml ();
-
+	// Register the ACAPI bridge before the HTML loads.  The browser may run
+	// the page's <script> immediately when LoadHTML is called, and the
+	// JavaScript code expects window.ACAPI to exist in its load handler.  If
+	// we load HTML first, the script can execute before registration, causing
+	// the "ACAPI недоступен" error even though we add the object moments
+	// later.  Swapping the order fixes the race.
 	if (m_browserCtrl != nullptr)
 		RegisterTopoMeshJSObject (*m_browserCtrl);
+
+	LoadHtml ();
 }
 
 void TopoMeshPalette::LoadHtml ()

@@ -1,0 +1,3 @@
+/workspaces/DWG-mesh/build/CMakeFiles/AddOn.dir
+/workspaces/DWG-mesh/build/CMakeFiles/edit_cache.dir
+/workspaces/DWG-mesh/build/CMakeFiles/rebuild_cache.dir

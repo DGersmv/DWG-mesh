@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -shared  -o libDWG-mesh.so CMakeFiles/AddOn.dir/Src/APICommon.c.o CMakeFiles/AddOn.dir/Src/AddOn.cpp.o CMakeFiles/AddOn.dir/Src/TopoMeshHelper.cpp.o CMakeFiles/AddOn.dir/Src/TopoMeshPalette.cpp.o CMakeFiles/AddOn.dir/Src/UserItemDialog.cpp.o 
