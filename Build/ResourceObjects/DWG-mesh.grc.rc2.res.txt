@@ -1,2 +1,0 @@
-﻿DLG_32500_TopoMesh_Browser	32500	0	Topo Mesh из DWG	""
-DLG_32500_TopoMesh_Browser-Browser_0	32500	1	Topo Mesh из DWG	"TopoMesh Browser Control"

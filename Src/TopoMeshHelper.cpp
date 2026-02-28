@@ -1,6 +1,5 @@
 #include "TopoMeshHelper.hpp"
 
-
 #include "APIEnvir.h"
 #include "ACAPinc.h"
 
@@ -19,7 +18,7 @@ namespace {
 struct TopoPoint { double x, y, z; };
 
 struct TopoParams {
-	Int32         layerIdx;      // 0-based порядковый номер из нашего списка
+	Int32         layerIdx;
 	double        radiusMm;
 	char          separator;
 	Int32         storyIdx;
@@ -98,7 +97,7 @@ static bool ParseTopoParams(const GS::UniString& json, TopoParams& p)
 }
 
 // =============================================================================
-// Парсинг высотной отметки ("14.200" → 14200.0 мм)
+// Парсинг высотной отметки
 // =============================================================================
 
 static bool ParseElevation(const char* text, char sep, double& outMm)
@@ -119,8 +118,7 @@ static bool ParseElevation(const char* text, char sep, double& outMm)
 }
 
 // =============================================================================
-// Индекс атрибута слоя по 0-based порядковому номеру нашего списка
-// По образцу LayerHelper.cpp: ACAPI_Attribute_GetNum + ACAPI_CreateAttributeIndex
+// Индекс атрибута слоя
 // =============================================================================
 
 static API_AttributeIndex GetLayerAttrIdx(Int32 listIndex)
@@ -138,12 +136,11 @@ static API_AttributeIndex GetLayerAttrIdx(Int32 listIndex)
 		if (current == listIndex) return attr.header.index;
 		++current;
 	}
-
-	return ACAPI_CreateAttributeIndex(1); // fallback
+	return ACAPI_CreateAttributeIndex(1);
 }
 
 // =============================================================================
-// Высота этажа — по образцу GroundHelper.cpp
+// Высота этажа
 // =============================================================================
 
 static double GetStoryElevM(Int32 storyIdx)
@@ -202,7 +199,7 @@ static void CollectOnLayer(API_AttributeIndex layerAttrIdx,
 }
 
 // =============================================================================
-// Сопоставление Arc ↔ Text
+// Сопоставление Arc <-> Text
 // =============================================================================
 
 static std::vector<TopoPoint> MatchPoints(
@@ -258,99 +255,100 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		return Error;
 	}
 
-	const double offM = p.bboxOffsetMm / 1000.0;
-	double minX = pts[0].x, maxX = pts[0].x;
-	double minY = pts[0].y, maxY = pts[0].y;
-	double minZ = pts[0].z;
-	for (size_t i = 1; i < pts.size(); ++i) {
-		if (pts[i].x < minX) minX = pts[i].x; if (pts[i].x > maxX) maxX = pts[i].x;
-		if (pts[i].y < minY) minY = pts[i].y; if (pts[i].y > maxY) maxY = pts[i].y;
-		if (pts[i].z < minZ) minZ = pts[i].z;
-	}
-	minX -= offM; minY -= offM; maxX += offM; maxY += offM;
-
-	const Int32 nC   = 4;                    // число углов контура
-	const Int32 nTP  = (Int32)pts.size();
-	const Int32 nTot = nC + nTP;             // всего записей в coords/meshPolyZ
+	// Все топо-точки идут как вершины контура — ArchiCAD сам триангулирует
+	const Int32 nUnique = (Int32)pts.size();
 
 	API_Element     elem = {};
 	API_ElementMemo memo = {};
-	BNZeroMemory(&elem, sizeof(elem));
-	BNZeroMemory(&memo, sizeof(memo));
 
-	elem.header.type.typeID = API_MeshID;
-	GSErrCode err = ACAPI_Element_GetDefaults(&elem, &memo);
+	elem.header.type = API_MeshID;
+	GSErrCode err = ACAPI_Element_GetDefaults(&elem, nullptr);
 	if (err != NoError) {
 		ACAPI_WriteReport("[TopoMesh] GetDefaults failed: %d", false, (int)err);
-		ACAPI_DisposeElemMemoHdls(&memo);
 		return err;
 	}
 
-	// Слой и этаж (GetDefaults уже задаёт разумные значения)
 	elem.header.layer    = GetLayerAttrIdx(p.meshLayerIdx);
 	elem.header.floorInd = (short)p.storyIdx;
-	// note: API_MeshHead.elemID is not exposed in SDK 27; skip name assignment
+	elem.mesh.level      = 0.0;
 
-	// параметры полигона – число вершин контура, sub‑polys всегда 1
-	elem.mesh.level          = minZ - storyElevM;
-	elem.mesh.poly.nCoords   = nC;
+	// Контур — прямоугольный bounding box (4 угла + замыкающая = 5 точек)
+	const Int32 nC      = 4;
+	const Int32 nCoords = nC + 1; // с замыкающей
+
+	// Bounding box
+	double minX = pts[0].x, maxX = pts[0].x;
+	double minY = pts[0].y, maxY = pts[0].y;
+	const double offM = p.bboxOffsetMm / 1000.0;
+	for (const auto& pt : pts) {
+		if (pt.x < minX) minX = pt.x; if (pt.x > maxX) maxX = pt.x;
+		if (pt.y < minY) minY = pt.y; if (pt.y > maxY) maxY = pt.y;
+	}
+	minX -= offM; minY -= offM; maxX += offM; maxY += offM;
+
+	elem.mesh.poly.nCoords   = nCoords;
 	elem.mesh.poly.nSubPolys = 1;
 	elem.mesh.poly.nArcs     = 0;
 
-	ACAPI_DisposeElemMemoHdls(&memo);
-	memo.coords    = reinterpret_cast<API_Coord**>(BMAllocateHandle((nTot+1)*(GSSize)sizeof(API_Coord), ALLOCATE_CLEAR, 0));
-	memo.meshPolyZ = reinterpret_cast<double**>  (BMAllocateHandle((nTot+1)*(GSSize)sizeof(double),     ALLOCATE_CLEAR, 0));
-	memo.pends     = reinterpret_cast<Int32**>   (BMAllocateHandle(2        *(GSSize)sizeof(Int32),      ALLOCATE_CLEAR, 0));
+	memo.coords    = reinterpret_cast<API_Coord**>   (BMAllocateHandle((nCoords+1)*(GSSize)sizeof(API_Coord),        ALLOCATE_CLEAR, 0));
+	memo.pends     = reinterpret_cast<Int32**>        (BMAllocateHandle(2          *(GSSize)sizeof(Int32),             ALLOCATE_CLEAR, 0));
+	memo.parcs     = reinterpret_cast<API_PolyArc**>  (BMAllocateHandle(1          *(GSSize)sizeof(API_PolyArc),      ALLOCATE_CLEAR, 0));
+	memo.meshPolyZ = reinterpret_cast<double**>       (BMAllocateHandle((nCoords+1)*(GSSize)sizeof(double),           ALLOCATE_CLEAR, 0));
 
-	if (!memo.coords || !memo.meshPolyZ || !memo.pends) {
+	// Внутренние точки рельефа — meshLevelCoords
+	const Int32 nLvl = nUnique;
+	memo.meshLevelCoords = reinterpret_cast<API_MeshLevelCoord**>(
+		BMAllocateHandle(nLvl*(GSSize)sizeof(API_MeshLevelCoord), ALLOCATE_CLEAR, 0));
+
+	if (!memo.coords || !memo.meshPolyZ || !memo.pends || !memo.parcs || !memo.meshLevelCoords) {
 		ACAPI_WriteReport("[TopoMesh] Ошибка памяти", false);
 		ACAPI_DisposeElemMemoHdls(&memo);
 		return Error;
 	}
 
-	const double cZ    = minZ - storyElevM;
-	const double cx[4] = { minX, maxX, maxX, minX };
-	const double cy[4] = { minY, minY, maxY, maxY };
-
-	// Вставляем контурные углы (индексы 1..nC)
+	// Контур: обход BL->BR->TR->TL->BL
+	const double cx4[4] = { minX, maxX, maxX, minX };
+	const double cy4[4] = { minY, minY, maxY, maxY };
 	for (Int32 i = 0; i < nC; ++i) {
-		(*memo.coords)[i+1].x    = cx[i];
-		(*memo.coords)[i+1].y    = cy[i];
-		(*memo.meshPolyZ)[i+1]   = cZ;
+		(*memo.coords)   [i+1].x = cx4[i];
+		(*memo.coords)   [i+1].y = cy4[i];
+		(*memo.meshPolyZ)[i+1]   = 0.0; // высота контура = 0 (level точки дадут рельеф)
 	}
+	(*memo.coords)   [nCoords] = (*memo.coords)[1];
+	(*memo.meshPolyZ)[nCoords] = 0.0;
 
-	// Внутренние топо-точки идут сразу после контура (индексы nC+1..nTotal)
-	for (Int32 i = 0; i < nTP; ++i) {
-		const Int32 idx = nC + i + 1;
-		(*memo.coords)[idx].x    = pts[i].x;
-		(*memo.coords)[idx].y    = pts[i].y;
-		(*memo.meshPolyZ)[idx]   = pts[i].z - storyElevM;
-	}
-
-	// один полигональный контур: старт в 0, длина = число углов (без дублирования первой точки)
 	(*memo.pends)[0] = 0;
-	(*memo.pends)[1] = nC;
+	(*memo.pends)[1] = nCoords;
+
+	// meshLevelEnds — обязателен вместе с meshLevelCoords
+	// один контур level-точек: ends[0]=0, ends[1]=nLvl
+	memo.meshLevelEnds = reinterpret_cast<Int32**>(BMAllocateHandle(2*(GSSize)sizeof(Int32), ALLOCATE_CLEAR, 0));
+	if (!memo.meshLevelEnds) {
+		ACAPI_WriteReport("[TopoMesh] Ошибка памяти (meshLevelEnds)", false);
+		ACAPI_DisposeElemMemoHdls(&memo);
+		return Error;
+	}
+	(*memo.meshLevelEnds)[0] = 0;
+	(*memo.meshLevelEnds)[1] = nLvl;
+
+	// Внутренние точки рельефа
+	for (Int32 i = 0; i < nLvl; ++i) {
+		(*memo.meshLevelCoords)[i].c.x = pts[i].x;
+		(*memo.meshLevelCoords)[i].c.y = pts[i].y;
+		(*memo.meshLevelCoords)[i].c.z = pts[i].z - storyElevM;
+	}
+
+	ACAPI_WriteReport("[TopoMesh] bbox=(%.2f,%.2f)-(%.2f,%.2f) nLvl=%d storyElevM=%.3f",
+		false, minX, minY, maxX, maxY, nLvl, storyElevM);
 
 	err = ACAPI_Element_Create(&elem, &memo);
+
 	ACAPI_DisposeElemMemoHdls(&memo);
 
-	if (err != NoError) {
-		ACAPI_WriteReport("[TopoMesh] Create failed: %d", false, (int)err);
-		// dump a few diagnostics to help spot bad values
-		ACAPI_WriteReport("[TopoMesh] nCoords=%d, pends=[%d,%d]", false,
-			elem.mesh.poly.nCoords,
-			(*memo.pends)[0], (*memo.pends)[1]);
-		if (memo.coords && memo.meshPolyZ) {
-			ACAPI_WriteReport("[TopoMesh] first coord (x,y) = %.3f,%.3f; z=%.3f (from meshPolyZ)", false,
-				(*memo.coords)[1].x, (*memo.coords)[1].y, (*memo.meshPolyZ)[1]);
-		}
-	}
-	else {
-		ACAPI_WriteReport("[TopoMesh] Mesh создан (%d точек)", false, nTP);
-	}
+	if (err != NoError) ACAPI_WriteReport("[TopoMesh] Create failed: %d", false, (int)err);
+	else                ACAPI_WriteReport("[TopoMesh] Mesh создан (%d level-точек)", false, nLvl);
 	return err;
 }
-
 } // namespace
 
 // =============================================================================
@@ -374,10 +372,8 @@ GS::UniString GetLayerListJson()
 		attr.header.typeID = API_LayerID;
 		attr.header.index  = ACAPI_CreateAttributeIndex(i);
 		if (ACAPI_Attribute_Get(&attr) != NoError) continue;
-
 		if (!first) json += ",";
 		first = false;
-
 		json += GS::UniString::Printf("{\"name\":\"%s\",\"index\":%d}",
 			JsonEscape(GS::UniString(attr.header.name)).ToCStr().Get(),
 			(int)listIdx);
@@ -420,7 +416,6 @@ GS::UniString GetSampleElevationText(Int32 layerIdx)
 		elem.header.guid = textList[i];
 		if (ACAPI_Element_Get(&elem) != NoError) continue;
 		if (elem.header.layer != layerAttrIdx) continue;
-
 		API_ElementMemo memo = {};
 		if (ACAPI_Element_GetMemo(textList[i], &memo, APIMemoMask_TextContent) != NoError) continue;
 		GS::UniString result;
@@ -437,19 +432,14 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	TopoParams params = {};
 	if (!ParseTopoParams(jsonPayload, params)) return false;
 
-	// diagnostics
 	GS::UInt32 layerCount = 0;
 	ACAPI_Attribute_GetNum(API_LayerID, layerCount);
-	ACAPI_WriteReport("[TopoMesh] Параметры: srcIdx=%d dstIdx=%d radius=%.0f sep=%c story=%d bbox=%.0f meshLayerCount=%u meshName='%s'",
+	ACAPI_WriteReport("[TopoMesh] srcIdx=%d dstIdx=%d radius=%.0f sep=%c story=%d bbox=%.0f layers=%u name='%s'",
 		false,
-		params.layerIdx,
-		params.meshLayerIdx,
-		params.radiusMm,
-		params.separator,
-		params.storyIdx,
-		params.bboxOffsetMm,
-		(layerCount),
-		params.meshName.ToCStr().Get());
+		params.layerIdx, params.meshLayerIdx,
+		params.radiusMm, params.separator,
+		params.storyIdx, params.bboxOffsetMm,
+		layerCount, params.meshName.ToCStr().Get());
 
 	if (params.layerIdx < 0 || params.layerIdx >= (Int32)layerCount) {
 		ACAPI_WriteReport("[TopoMesh] Неверный исходный слой %d", false, params.layerIdx);
@@ -460,20 +450,17 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 		return false;
 	}
 
-	// if no story selected (zero or negative), try find first positive index
 	if (params.storyIdx <= 0) {
 		API_StoryInfo si = {};
 		if (ACAPI_ProjectSetting_GetStorySettings(&si) == NoError && si.data != nullptr) {
 			const Int32 cnt = (Int32)(BMGetHandleSize((GSHandle)si.data) / sizeof(API_StoryType));
 			for (Int32 i = 0; i < cnt; ++i) {
-				Int32 idx = (*si.data)[i].index;
-				if (idx > 0) { params.storyIdx = idx; break; }
+				if ((*si.data)[i].index > 0) { params.storyIdx = (*si.data)[i].index; break; }
 			}
 			BMKillHandle((GSHandle*)&si.data);
 		}
-		if (params.storyIdx <= 0) // still none? fall back to 1
-			params.storyIdx = 1;
-		ACAPI_WriteReport("[TopoMesh] Story unspecified or invalid, using %d", false, params.storyIdx);
+		if (params.storyIdx <= 0) params.storyIdx = 1;
+		ACAPI_WriteReport("[TopoMesh] storyIdx fallback -> %d", false, params.storyIdx);
 	}
 
 	API_AttributeIndex layerAttrIdx = GetLayerAttrIdx(params.layerIdx);
@@ -491,82 +478,77 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	if (topo.size() < 3) { ACAPI_WriteReport("[TopoMesh] Мало точек", false); return false; }
 
 	const double storyElevM = GetStoryElevM(params.storyIdx);
-
-	// debug: print element header values we'll use
-	// we can't rely on the internal field of API_AttributeIndex (may be opaque)
-	// simply log the pointer-sized data as an integer for diagnostics
 	{
-		API_AttributeIndex idx = GetLayerAttrIdx(params.meshLayerIdx);
-		int raw = 0;
-		static_assert(sizeof(raw) >= sizeof(idx), "raw int too small");
-		std::memcpy(&raw, &idx, sizeof(idx));
-		ACAPI_WriteReport("[TopoMesh] will create mesh on layer attr raw=0x%X, floorInd %d, elevM %.3f", false,
-			raw,
-			(int)params.storyIdx,
-			storyElevM);
-	}
-
-	GSErrCode err = BuildMesh(topo, params, storyElevM);
-	if (err != NoError) {
-		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d", false, (int)err);
-	}
-	return err == NoError;
-}
-
-}
-
-namespace TopoMeshHelper {
-
-	void GetLayerList (GS::Array<GS::Pair<GS::UniString, Int32>>& outLayers)
-	{
-		outLayers.Clear ();
-	
-		// new ACAPI_Attribute_GetNum signature takes typeID and reference
-		GS::UInt32 layerCount = 0;
-		if (ACAPI_Attribute_GetNum(API_LayerID, layerCount) != NoError || layerCount == 0)
-			return;
-	
-		{
-		Int32 listIdx = 0;
-		for (GS::UInt32 i = 1; i <= layerCount; ++i) {
-			API_Attribute attr = {};
-			attr.header.typeID = API_LayerID;
-			// build the attribute index from the sequential ID
-			attr.header.index  = ACAPI_CreateAttributeIndex((short)i);
-
-			if (ACAPI_Attribute_Get(&attr) == NoError) {
-				// push the zero-based position in the list (matching GetLayerListJson)
-				outLayers.Push(GS::Pair<GS::UniString, Int32>{
-					attr.header.name,
-					listIdx
-				});
-				++listIdx;
-			}
+		API_StoryInfo si2 = {};
+		if (ACAPI_ProjectSetting_GetStorySettings(&si2) == NoError && si2.data != nullptr) {
+			ACAPI_WriteReport("[TopoMesh] firstStory=%d lastStory=%d storyIdx=%d storyElevM=%.3f",
+				false, si2.firstStory, si2.lastStory, params.storyIdx, storyElevM);
+			BMKillHandle((GSHandle*)&si2.data);
 		}
 	}
-	}
-	
-	void GetStoryList (GS::Array<GS::Pair<GS::UniString, Int32>>& outStories)
-	{
-		outStories.Clear ();
-	
-		// use the same mechanism as JSON helper to stay in sync with
-		// the current API (ProjectSetting_GetStorySettings)
-		API_StoryInfo si = {};
-		if (ACAPI_ProjectSetting_GetStorySettings(&si) != NoError)
-			return;
-		if (si.data == nullptr)
-			return;
-	
-		const Int32 cnt = (Int32)(BMGetHandleSize((GSHandle)si.data) / sizeof(API_StoryType));
-		for (Int32 i = 0; i < cnt; ++i) {
-			const API_StoryType& st = (*si.data)[i];
-			outStories.Push(GS::Pair<GS::UniString, Int32>{
-				GS::UniString(st.uName),
-				(Int32)st.index
+
+	// CEF thread — нельзя вызывать API напрямую.
+	// Передаём данные через static и запрашиваем вызов из главного потока.
+	static GS::UniString s_pendingPayload;
+	static std::vector<TopoPoint> s_pts;
+	static TopoParams s_params;
+	static double s_storyElevM;
+
+	s_pendingPayload = jsonPayload;
+	s_pts   = topo;
+	s_params = params;
+	s_storyElevM = storyElevM;
+
+	GSErrCode evErr = ACAPI_Command_CallFromEventLoop(
+		[](void*) -> GSErrCode {
+			return ACAPI_CallUndoableCommand("Create Topo Mesh", [&]() -> GSErrCode {
+				return BuildMesh(s_pts, s_params, s_storyElevM);
 			});
+		},
+		nullptr, false);
+
+	if (evErr != NoError)
+		ACAPI_WriteReport("[TopoMesh] CallFromEventLoop failed: %d", false, (int)evErr);
+	else
+		ACAPI_WriteReport("[TopoMesh] CallFromEventLoop scheduled ok", false);
+
+	return evErr == NoError;
+}
+
+void GetLayerList(GS::Array<GS::Pair<GS::UniString, Int32>>& outLayers)
+{
+	outLayers.Clear();
+	GS::UInt32 layerCount = 0;
+	if (ACAPI_Attribute_GetNum(API_LayerID, layerCount) != NoError || layerCount == 0)
+		return;
+
+	Int32 listIdx = 0;
+	for (GS::UInt32 i = 1; i <= layerCount; ++i) {
+		API_Attribute attr = {};
+		attr.header.typeID = API_LayerID;
+		attr.header.index  = ACAPI_CreateAttributeIndex((short)i);
+		if (ACAPI_Attribute_Get(&attr) == NoError) {
+			outLayers.Push(GS::Pair<GS::UniString, Int32>{ attr.header.name, listIdx });
+			++listIdx;
 		}
-		BMKillHandle((GSHandle*)&si.data);
 	}
-	
-	} // namespace TopoMeshHelper
+}
+
+void GetStoryList(GS::Array<GS::Pair<GS::UniString, Int32>>& outStories)
+{
+	outStories.Clear();
+	API_StoryInfo si = {};
+	if (ACAPI_ProjectSetting_GetStorySettings(&si) != NoError)
+		return;
+	if (si.data == nullptr)
+		return;
+
+	const Int32 cnt = (Int32)(BMGetHandleSize((GSHandle)si.data) / sizeof(API_StoryType));
+	for (Int32 i = 0; i < cnt; ++i) {
+		const API_StoryType& st = (*si.data)[i];
+		outStories.Push(GS::Pair<GS::UniString, Int32>{ GS::UniString(st.uName), (Int32)st.index });
+	}
+	BMKillHandle((GSHandle*)&si.data);
+}
+
+} // namespace TopoMeshHelper
