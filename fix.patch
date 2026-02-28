@@ -39,16 +39,10 @@ index a5b1eaa..b250743 100644
  (*memo.meshPolyZ)[idx]   = pts[i].z - storyElevM;
  }
 
--// один полигональный контур: старт в 0, длина = число углов (без дублирования первой точки)
-+// один полигональный контур: start=0, end=nCC (включая замыкающую)
- (*memo.pends)[0] = 0;
--(*memo.pends)[1] = nC;
-+(*memo.pends)[1] = nCC;
-+
-+const Int32 diagP0 = (*memo.pends)[0];
-+const Int32 diagP1 = (*memo.pends)[1];
-+const API_Coord diagC1 = (*memo.coords)[1];
-+const double diagZ1 = (*memo.meshPolyZ)[1];
+// один полигональный контур: старт в 0, длина = число углов (без дублирования первой точки)
+(*memo.pends)[0] = 0;
+(*memo.pends)[1] = nC;
+
 
  err = ACAPI_Element_Create(&elem, &memo);
  ACAPI_DisposeElemMemoHdls(&memo);

@@ -288,10 +288,10 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 	}
 	minX -= offM; minY -= offM; maxX += offM; maxY += offM;
 
+	
 	const Int32 nC   = 4;                    // число углов контура
-	const Int32 nCC = nC + 1;               // контур + замыкающая точка
-	const Int32 nTP = (Int32)uniqPts.size();
-	const Int32 nTot = nCC + nTP;            // всего записей в coords/meshPolyZ
+	const Int32 nTP  = (Int32)uniqPts.size();
+	const Int32 nTot = nC + nTP;  
 
 	API_Element     elem = {};
 	API_ElementMemo memo = {};
