@@ -255,20 +255,42 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		return Error;
 	}
 
+	std::vector<TopoPoint> uniqPts;
+	uniqPts.reserve(pts.size());
+	const double eps = 1.0e-6;
+	for (const TopoPoint& tp : pts) {
+		bool duplicate = false;
+		for (const TopoPoint& up : uniqPts) {
+			if (std::fabs(tp.x - up.x) < eps && std::fabs(tp.y - up.y) < eps) {
+				duplicate = true;
+				break;
+			}
+		}
+		if (!duplicate)
+			uniqPts.push_back(tp);
+	}
+	if (uniqPts.size() < 3) {
+		ACAPI_WriteReport("[TopoMesh] После удаления дублей осталось %d точек", false, (int)uniqPts.size());
+		return Error;
+	}
+	if (uniqPts.size() != pts.size()) {
+		ACAPI_WriteReport("[TopoMesh] Удалены дубли точек: %d -> %d", false, (int)pts.size(), (int)uniqPts.size());
+	}
+
 	const double offM = p.bboxOffsetMm / 1000.0;
-	double minX = pts[0].x, maxX = pts[0].x;
-	double minY = pts[0].y, maxY = pts[0].y;
-	double minZ = pts[0].z;
-	for (size_t i = 1; i < pts.size(); ++i) {
-		if (pts[i].x < minX) minX = pts[i].x; if (pts[i].x > maxX) maxX = pts[i].x;
-		if (pts[i].y < minY) minY = pts[i].y; if (pts[i].y > maxY) maxY = pts[i].y;
-		if (pts[i].z < minZ) minZ = pts[i].z;
+	double minX = uniqPts[0].x, maxX = uniqPts[0].x;
+	double minY = uniqPts[0].y, maxY = uniqPts[0].y;
+	double minZ = uniqPts[0].z;
+	for (size_t i = 1; i < uniqPts.size(); ++i) {
+		if (uniqPts[i].x < minX) minX = uniqPts[i].x; if (uniqPts[i].x > maxX) maxX = uniqPts[i].x;
+		if (uniqPts[i].y < minY) minY = uniqPts[i].y; if (uniqPts[i].y > maxY) maxY = uniqPts[i].y;
+		if (uniqPts[i].z < minZ) minZ = uniqPts[i].z;
 	}
 	minX -= offM; minY -= offM; maxX += offM; maxY += offM;
 
 	const Int32 nC   = 4;                    // число углов контура
-	const Int32 nCC  = nC + 1;               // контур + замыкающая точка
-	const Int32 nTP  = (Int32)pts.size();
+	const Int32 nCC = nC + 1;               // контур + замыкающая точка
+	const Int32 nTP = (Int32)uniqPts.size();
 	const Int32 nTot = nCC + nTP;            // всего записей в coords/meshPolyZ
 
 	API_Element     elem = {};
@@ -317,15 +339,15 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		(*memo.meshPolyZ)[i+1]   = cZ;
 	}
 	// Явно замыкаем контур
-	(*memo.coords)[nC + 1]  = (*memo.coords)[1];
-	(*memo.meshPolyZ)[nC+1] = cZ;
+	(*memo.coords)[nC + 1] = (*memo.coords)[1];
+	(*memo.meshPolyZ)[nC + 1] = cZ;
 
 	// Внутренние топо-точки идут сразу после замкнутого контура
 	for (Int32 i = 0; i < nTP; ++i) {
 		const Int32 idx = nCC + i + 1;
-		(*memo.coords)[idx].x    = pts[i].x;
-		(*memo.coords)[idx].y    = pts[i].y;
-		(*memo.meshPolyZ)[idx]   = pts[i].z - storyElevM;
+		(*memo.coords)[idx].x = uniqPts[i].x;
+		(*memo.coords)[idx].y = uniqPts[i].y;
+		(*memo.meshPolyZ)[idx] = uniqPts[i].z - storyElevM;
 	}
 
 	// один полигональный контур: start=0, end=nCC (включая замыкающую)
@@ -475,7 +497,7 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	CollectOnLayer(layerAttrIdx, arcs, texts);
 
 	ACAPI_WriteReport("[TopoMesh] Дуг: %d, текстов: %d", false, (int)arcs.size(), (int)texts.size());
-	if (arcs.empty())  { ACAPI_WriteReport("[TopoMesh] Нет Arc на слое",     false); return false; }
+	if (arcs.empty()) { ACAPI_WriteReport("[TopoMesh] Нет Arc на слое", false); return false; }
 	if (texts.empty()) { ACAPI_WriteReport("[TopoMesh] Нет текстов на слое", false); return false; }
 
 	std::vector<TopoPoint> topo = MatchPoints(arcs, texts, params.radiusMm, params.separator);
@@ -500,24 +522,17 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 	static double s_storyElevM;
 
 	s_pendingPayload = jsonPayload;
-	s_pts   = topo;
+	s_pts = topo;
 	s_params = params;
 	s_storyElevM = storyElevM;
 
-	GSErrCode evErr = ACAPI_Command_CallFromEventLoop(
-		[](void*) -> GSErrCode {
-			return ACAPI_CallUndoableCommand("Create Topo Mesh", [&]() -> GSErrCode {
-				return BuildMesh(s_pts, s_params, s_storyElevM);
-			});
-		},
-		nullptr, false);
-
-	if (evErr != NoError)
-		ACAPI_WriteReport("[TopoMesh] CallFromEventLoop failed: %d", false, (int)evErr);
-	else
-		ACAPI_WriteReport("[TopoMesh] CallFromEventLoop scheduled ok", false);
-
-	return evErr == NoError;
+	const GS::UniString cmdName = "Create Topo Mesh";
+	GSErrCode err = ACAPI_CallUndoableCommand(cmdName, [&]() -> GSErrCode {
+		return BuildMesh(topo, params, storyElevM);
+		});
+	if (err != NoError)
+		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d", false, (int)err);
+	return err == NoError;
 }
 
 void GetLayerList(GS::Array<GS::Pair<GS::UniString, Int32>>& outLayers)

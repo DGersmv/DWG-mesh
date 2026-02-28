@@ -1,7 +1,0 @@
-﻿  APICommon.c
-  AddOn.cpp
-  TopoMeshHelper.cpp
-C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\Src\TopoMeshHelper.cpp(507,20): error C3861: ACAPI_Command_CallFromEventLoop: идентификатор не найден
-  TopoMeshPalette.cpp
-  UserItemDialog.cpp
-  Создание кода...
