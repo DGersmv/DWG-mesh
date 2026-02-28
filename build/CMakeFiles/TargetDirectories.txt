@@ -1,0 +1,3 @@
+C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/build/CMakeFiles/AddOnResources.dir
+C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/build/CMakeFiles/AddOn.dir
+C:/Program Files/Graphisoft/API Development Kit 27.6003/Examples/DWG-mesh/build/CMakeFiles/ALL_BUILD.dir

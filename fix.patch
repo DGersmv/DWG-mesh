@@ -1,0 +1,67 @@
+﻿diff --git a/Src/TopoMeshHelper.cpp b/Src/TopoMeshHelper.cpp
+index a5b1eaa..b250743 100644
+--- a/Src/TopoMeshHelper.cpp
++++ b/Src/TopoMeshHelper.cpp
+@@ -270,8 +270,9 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
+ minX -= offM; minY -= offM; maxX += offM; maxY += offM;
+
+ const Int32 nC   = 4;                    // число углов контура
++const Int32 nCC  = nC + 1;               // контур + замыкающая точка
+ const Int32 nTP  = (Int32)pts.size();
+-const Int32 nTot = nC + nTP;             // всего записей в coords/meshPolyZ
++const Int32 nTot = nCC + nTP;            // всего записей в coords/meshPolyZ
+@@ -291,9 +292,9 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
+ elem.header.floorInd = (short)p.storyIdx;
+ // note: API_MeshHead.elemID is not exposed in SDK 27; skip name assignment
+
+-// параметры полигона – число вершин контура, sub‑polys всегда 1
++// параметры полигона – контур должен быть замкнут (последняя == первая)
+ elem.mesh.level          = minZ - storyElevM;
+-elem.mesh.poly.nCoords   = nC;
++elem.mesh.poly.nCoords   = nCC;
+ elem.mesh.poly.nSubPolys = 1;
+ elem.mesh.poly.nArcs     = 0;
+@@ -318,18 +319,26 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
+ (*memo.coords)[i+1].y    = cy[i];
+ (*memo.meshPolyZ)[i+1]   = cZ;
+ }
++// Явно замыкаем контур
++(*memo.coords)[nC + 1]  = (*memo.coords)[1];
++(*memo.meshPolyZ)[nC+1] = cZ;
+
+-// Внутренние топо-точки идут сразу после контура (индексы nC+1..nTotal)
++// Внутренние топо-точки идут сразу после замкнутого контура
+ for (Int32 i = 0; i < nTP; ++i) {
+-const Int32 idx = nC + i + 1;
++const Int32 idx = nCC + i + 1;
+ (*memo.coords)[idx].x    = pts[i].x;
+ (*memo.coords)[idx].y    = pts[i].y;
+ (*memo.meshPolyZ)[idx]   = pts[i].z - storyElevM;
+ }
+
+-// один полигональный контур: старт в 0, длина = число углов (без дублирования первой точки)
++// один полигональный контур: start=0, end=nCC (включая замыкающую)
+ (*memo.pends)[0] = 0;
+-(*memo.pends)[1] = nC;
++(*memo.pends)[1] = nCC;
++
++const Int32 diagP0 = (*memo.pends)[0];
++const Int32 diagP1 = (*memo.pends)[1];
++const API_Coord diagC1 = (*memo.coords)[1];
++const double diagZ1 = (*memo.meshPolyZ)[1];
+
+ err = ACAPI_Element_Create(&elem, &memo);
+ ACAPI_DisposeElemMemoHdls(&memo);
+@@ -339,11 +348,9 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
+ // dump a few diagnostics to help spot bad values
+ ACAPI_WriteReport("[TopoMesh] nCoords=%d, pends=[%d,%d]", false,
+ elem.mesh.poly.nCoords,
+-(*memo.pends)[0], (*memo.pends)[1]);
+-if (memo.coords && memo.meshPolyZ) {
+-ACAPI_WriteReport("[TopoMesh] first coord (x,y) = %.3f,%.3f; z=%.3f (from meshPolyZ)", false,
+-(*memo.coords)[1].x, (*memo.coords)[1].y, (*memo.meshPolyZ)[1]);
+-}
++diagP0, diagP1);
++ACAPI_WriteReport("[TopoMesh] first coord (x,y) = %.3f,%.3f; z=%.3f (from meshPolyZ)", false,
++diagC1.x, diagC1.y, diagZ1);
+ }

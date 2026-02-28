@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Debug"/>
+		<BuildType Name="Release"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="AddOn.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="98dbac00-cd97-3e0a-b752-1f6e56c8e5e2">
+		<BuildDependency Project="AddOnResources.vcxproj"/>
+	</Project>
+	<Project Path="AddOnResources.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="23079a11-4cc9-34f6-abe4-f1459a9661ef"/>
+	<Folder Name="/CMakePredefinedTargets/">
+		<Project Path="ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="80b4e5fd-fcae-3de1-b848-11915dd05a76" DefaultStartup="true">
+			<BuildDependency Project="AddOn.vcxproj"/>
+			<BuildDependency Project="AddOnResources.vcxproj"/>
+			<Build Solution="Debug|*" Project="false"/>
+			<Build Solution="Release|*" Project="false"/>
+			<Build Solution="RelWithDebInfo|*" Project="false"/>
+		</Project>
+	</Folder>
+</Solution>

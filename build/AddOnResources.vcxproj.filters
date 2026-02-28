@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\build\CMakeFiles\f937507b25ff3c691c1c5c34a9228f56\AddOnResources.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\build\CMakeFiles\a8f67e0ac7c7795d10cafbd55ff00c9b\AddOnResources.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX.win\DWG-mesh.rc2">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\DWG-meshFix.grc">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RINT\DWG-mesh.grc">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\CSV_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Close_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Contour_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Dims_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Land_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Layers_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Random_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\RotSurf_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Rotate_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Spline_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Support_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\Table_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\RFIX\Images\TopoMesh_28x28.svg">
+      <Filter>Images</Filter>
+    </None>
+    <None Include="C:\Program Files\Graphisoft\API Development Kit 27.6003\Examples\DWG-mesh\build\CMakeFiles\AddOnResources" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{CA3F7FBB-1EFE-3889-81C4-A1FBDF8CD0D6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Images">
+      <UniqueIdentifier>{888118EF-693B-316D-A128-25D6755937CA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{7BACB4EA-AFB0-378C-8B51-C00E2B2A94F6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

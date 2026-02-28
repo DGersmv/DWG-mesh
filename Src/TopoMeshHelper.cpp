@@ -255,98 +255,103 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		return Error;
 	}
 
-	// Все топо-точки идут как вершины контура — ArchiCAD сам триангулирует
-	const Int32 nUnique = (Int32)pts.size();
-
-	API_Element     elem = {};
-	API_ElementMemo memo = {};
-
-	elem.header.type = API_MeshID;
-	GSErrCode err = ACAPI_Element_GetDefaults(&elem, nullptr);
-	if (err != NoError) {
-		ACAPI_WriteReport("[TopoMesh] GetDefaults failed: %d", false, (int)err);
-		return err;
-	}
-
-	elem.header.layer    = GetLayerAttrIdx(p.meshLayerIdx);
-	elem.header.floorInd = (short)p.storyIdx;
-	elem.mesh.level      = 0.0;
-
-	// Контур — прямоугольный bounding box (4 угла + замыкающая = 5 точек)
-	const Int32 nC      = 4;
-	const Int32 nCoords = nC + 1; // с замыкающей
-
-	// Bounding box
+	const double offM = p.bboxOffsetMm / 1000.0;
 	double minX = pts[0].x, maxX = pts[0].x;
 	double minY = pts[0].y, maxY = pts[0].y;
-	const double offM = p.bboxOffsetMm / 1000.0;
-	for (const auto& pt : pts) {
-		if (pt.x < minX) minX = pt.x; if (pt.x > maxX) maxX = pt.x;
-		if (pt.y < minY) minY = pt.y; if (pt.y > maxY) maxY = pt.y;
+	double minZ = pts[0].z;
+	for (size_t i = 1; i < pts.size(); ++i) {
+		if (pts[i].x < minX) minX = pts[i].x; if (pts[i].x > maxX) maxX = pts[i].x;
+		if (pts[i].y < minY) minY = pts[i].y; if (pts[i].y > maxY) maxY = pts[i].y;
+		if (pts[i].z < minZ) minZ = pts[i].z;
 	}
 	minX -= offM; minY -= offM; maxX += offM; maxY += offM;
 
-	elem.mesh.poly.nCoords   = nCoords;
+	const Int32 nC   = 4;                    // число углов контура
+	const Int32 nCC  = nC + 1;               // контур + замыкающая точка
+	const Int32 nTP  = (Int32)pts.size();
+	const Int32 nTot = nCC + nTP;            // всего записей в coords/meshPolyZ
+
+	API_Element     elem = {};
+	API_ElementMemo memo = {};
+	BNZeroMemory(&elem, sizeof(elem));
+	BNZeroMemory(&memo, sizeof(memo));
+
+	elem.header.type.typeID = API_MeshID;
+	GSErrCode err = ACAPI_Element_GetDefaults(&elem, &memo);
+	if (err != NoError) {
+		ACAPI_WriteReport("[TopoMesh] GetDefaults failed: %d", false, (int)err);
+		ACAPI_DisposeElemMemoHdls(&memo);
+		return err;
+	}
+
+	// Слой и этаж (GetDefaults уже задаёт разумные значения)
+	elem.header.layer    = GetLayerAttrIdx(p.meshLayerIdx);
+	elem.header.floorInd = (short)p.storyIdx;
+	// note: API_MeshHead.elemID is not exposed in SDK 27; skip name assignment
+
+	// параметры полигона – контур должен быть замкнут (последняя == первая)
+	elem.mesh.level          = minZ - storyElevM;
+	elem.mesh.poly.nCoords   = nCC;
 	elem.mesh.poly.nSubPolys = 1;
 	elem.mesh.poly.nArcs     = 0;
 
-	memo.coords    = reinterpret_cast<API_Coord**>   (BMAllocateHandle((nCoords+1)*(GSSize)sizeof(API_Coord),        ALLOCATE_CLEAR, 0));
-	memo.pends     = reinterpret_cast<Int32**>        (BMAllocateHandle(2          *(GSSize)sizeof(Int32),             ALLOCATE_CLEAR, 0));
-	memo.parcs     = reinterpret_cast<API_PolyArc**>  (BMAllocateHandle(1          *(GSSize)sizeof(API_PolyArc),      ALLOCATE_CLEAR, 0));
-	memo.meshPolyZ = reinterpret_cast<double**>       (BMAllocateHandle((nCoords+1)*(GSSize)sizeof(double),           ALLOCATE_CLEAR, 0));
+	ACAPI_DisposeElemMemoHdls(&memo);
+	memo.coords    = reinterpret_cast<API_Coord**>(BMAllocateHandle((nTot+1)*(GSSize)sizeof(API_Coord), ALLOCATE_CLEAR, 0));
+	memo.meshPolyZ = reinterpret_cast<double**>  (BMAllocateHandle((nTot+1)*(GSSize)sizeof(double),     ALLOCATE_CLEAR, 0));
+	memo.pends     = reinterpret_cast<Int32**>   (BMAllocateHandle(2        *(GSSize)sizeof(Int32),      ALLOCATE_CLEAR, 0));
 
-	// Внутренние точки рельефа — meshLevelCoords
-	const Int32 nLvl = nUnique;
-	memo.meshLevelCoords = reinterpret_cast<API_MeshLevelCoord**>(
-		BMAllocateHandle(nLvl*(GSSize)sizeof(API_MeshLevelCoord), ALLOCATE_CLEAR, 0));
-
-	if (!memo.coords || !memo.meshPolyZ || !memo.pends || !memo.parcs || !memo.meshLevelCoords) {
+	if (!memo.coords || !memo.meshPolyZ || !memo.pends) {
 		ACAPI_WriteReport("[TopoMesh] Ошибка памяти", false);
 		ACAPI_DisposeElemMemoHdls(&memo);
 		return Error;
 	}
 
-	// Контур: обход BL->BR->TR->TL->BL
-	const double cx4[4] = { minX, maxX, maxX, minX };
-	const double cy4[4] = { minY, minY, maxY, maxY };
+	const double cZ    = minZ - storyElevM;
+	const double cx[4] = { minX, maxX, maxX, minX };
+	const double cy[4] = { minY, minY, maxY, maxY };
+
+	// Вставляем контурные углы (индексы 1..nC)
 	for (Int32 i = 0; i < nC; ++i) {
-		(*memo.coords)   [i+1].x = cx4[i];
-		(*memo.coords)   [i+1].y = cy4[i];
-		(*memo.meshPolyZ)[i+1]   = 0.0; // высота контура = 0 (level точки дадут рельеф)
+		(*memo.coords)[i+1].x    = cx[i];
+		(*memo.coords)[i+1].y    = cy[i];
+		(*memo.meshPolyZ)[i+1]   = cZ;
 	}
-	(*memo.coords)   [nCoords] = (*memo.coords)[1];
-	(*memo.meshPolyZ)[nCoords] = 0.0;
+	// Явно замыкаем контур
+	(*memo.coords)[nC + 1]  = (*memo.coords)[1];
+	(*memo.meshPolyZ)[nC+1] = cZ;
 
+	// Внутренние топо-точки идут сразу после замкнутого контура
+	for (Int32 i = 0; i < nTP; ++i) {
+		const Int32 idx = nCC + i + 1;
+		(*memo.coords)[idx].x    = pts[i].x;
+		(*memo.coords)[idx].y    = pts[i].y;
+		(*memo.meshPolyZ)[idx]   = pts[i].z - storyElevM;
+	}
+
+	// один полигональный контур: start=0, end=nCC (включая замыкающую)
 	(*memo.pends)[0] = 0;
-	(*memo.pends)[1] = nCoords;
+	(*memo.pends)[1] = nCC;
 
-	// meshLevelEnds — обязателен вместе с meshLevelCoords
-	// один контур level-точек: ends[0]=0, ends[1]=nLvl
-	memo.meshLevelEnds = reinterpret_cast<Int32**>(BMAllocateHandle(2*(GSSize)sizeof(Int32), ALLOCATE_CLEAR, 0));
-	if (!memo.meshLevelEnds) {
-		ACAPI_WriteReport("[TopoMesh] Ошибка памяти (meshLevelEnds)", false);
-		ACAPI_DisposeElemMemoHdls(&memo);
-		return Error;
-	}
-	(*memo.meshLevelEnds)[0] = 0;
-	(*memo.meshLevelEnds)[1] = nLvl;
-
-	// Внутренние точки рельефа
-	for (Int32 i = 0; i < nLvl; ++i) {
-		(*memo.meshLevelCoords)[i].c.x = pts[i].x;
-		(*memo.meshLevelCoords)[i].c.y = pts[i].y;
-		(*memo.meshLevelCoords)[i].c.z = pts[i].z - storyElevM;
-	}
-
-	ACAPI_WriteReport("[TopoMesh] bbox=(%.2f,%.2f)-(%.2f,%.2f) nLvl=%d storyElevM=%.3f",
-		false, minX, minY, maxX, maxY, nLvl, storyElevM);
+	const Int32 diagP0 = (*memo.pends)[0];
+	const Int32 diagP1 = (*memo.pends)[1];
+	const API_Coord diagC1 = (*memo.coords)[1];
+	const double diagZ1 = (*memo.meshPolyZ)[1];
 
 	err = ACAPI_Element_Create(&elem, &memo);
-
 	ACAPI_DisposeElemMemoHdls(&memo);
 
-	if (err != NoError) ACAPI_WriteReport("[TopoMesh] Create failed: %d", false, (int)err);
-	else                ACAPI_WriteReport("[TopoMesh] Mesh создан (%d level-точек)", false, nLvl);
+	if (err != NoError) {
+		ACAPI_WriteReport("[TopoMesh] Create failed: %d", false, (int)err);
+		// dump a few diagnostics to help spot bad values
+		ACAPI_WriteReport("[TopoMesh] nCoords=%d, pends=[%d,%d]", false,
+			elem.mesh.poly.nCoords,
+			diagP0, diagP1);
+		ACAPI_WriteReport("[TopoMesh] first coord (x,y) = %.3f,%.3f; z=%.3f (from meshPolyZ)", false,
+			diagC1.x, diagC1.y, diagZ1);
+	}
+	else {
+		ACAPI_WriteReport("[TopoMesh] Mesh создан (%d точек)", false, nTP);
+	}
 	return err;
 }
 } // namespace
