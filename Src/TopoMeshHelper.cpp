@@ -456,21 +456,24 @@ namespace TopoMeshHelper {
 		if (ACAPI_Attribute_GetNum(API_LayerID, layerCount) != NoError || layerCount == 0)
 			return;
 	
+		{
+		Int32 listIdx = 0;
 		for (GS::UInt32 i = 1; i <= layerCount; ++i) {
 			API_Attribute attr = {};
 			attr.header.typeID = API_LayerID;
-			// Attribute index must be created using the helper function
+			// build the attribute index from the sequential ID
 			attr.header.index  = ACAPI_CreateAttributeIndex((short)i);
-	
+
 			if (ACAPI_Attribute_Get(&attr) == NoError) {
-				// i already represents the real attribute index used to construct
-				// attr.header.index, so it can be pushed directly.
+				// push the zero-based position in the list (matching GetLayerListJson)
 				outLayers.Push(GS::Pair<GS::UniString, Int32>{
 					attr.header.name,
-					(Int32)i
+					listIdx
 				});
+				++listIdx;
 			}
 		}
+	}
 	}
 	
 	void GetStoryList (GS::Array<GS::Pair<GS::UniString, Int32>>& outStories)
