@@ -448,16 +448,20 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 		return false;
 	}
 
-	// if no story specified, select the first available one (avoid floorInd=0)
+	// if no story selected (zero or negative), try find first positive index
 	if (params.storyIdx <= 0) {
 		API_StoryInfo si = {};
 		if (ACAPI_ProjectSetting_GetStorySettings(&si) == NoError && si.data != nullptr) {
-			if (BMGetHandleSize((GSHandle)si.data) >= sizeof(API_StoryType)) {
-				params.storyIdx = (*si.data)[0].index;
+			const Int32 cnt = (Int32)(BMGetHandleSize((GSHandle)si.data) / sizeof(API_StoryType));
+			for (Int32 i = 0; i < cnt; ++i) {
+				Int32 idx = (*si.data)[i].index;
+				if (idx > 0) { params.storyIdx = idx; break; }
 			}
 			BMKillHandle((GSHandle*)&si.data);
 		}
-		ACAPI_WriteReport("[TopoMesh] Story unspecified, using %d", false, params.storyIdx);
+		if (params.storyIdx <= 0) // still none? fall back to 1
+			params.storyIdx = 1;
+		ACAPI_WriteReport("[TopoMesh] Story unspecified or invalid, using %d", false, params.storyIdx);
 	}
 
 	API_AttributeIndex layerAttrIdx = GetLayerAttrIdx(params.layerIdx);
