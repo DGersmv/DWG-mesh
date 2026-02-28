@@ -286,15 +286,10 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		return err;
 	}
 
-	// Слой, этаж и имя
+	// Слой и этаж (GetDefaults уже задаёт разумные значения)
 	elem.header.layer    = GetLayerAttrIdx(p.meshLayerIdx);
 	elem.header.floorInd = (short)p.storyIdx;
-	// заполнение поля elemID на случай, если имя передано
-	if (!p.meshName.IsEmpty()) {
-		// GS::ucscpy работает с uchar_t*, длина ограничена MAXPATHL или 63
-		GS::ucscpy((GS::uchar_t*)elem.mesh.head.elemID.elemIDStr,
-			p.meshName.ToUStr().Get());
-	}
+	// note: API_MeshHead.elemID is not exposed in SDK 27; skip name assignment
 
 	// параметры полигона – число вершин контура, sub‑polys всегда 1
 	elem.mesh.level          = minZ - storyElevM;
@@ -345,9 +340,9 @@ static GSErrCode BuildMesh(const std::vector<TopoPoint>& pts,
 		ACAPI_WriteReport("[TopoMesh] nCoords=%d, pends=[%d,%d]", false,
 			elem.mesh.poly.nCoords,
 			(*memo.pends)[0], (*memo.pends)[1]);
-		if (memo.coords) {
-			ACAPI_WriteReport("[TopoMesh] first coord (x,y,z) = %.3f,%.3f,%.3f", false,
-				(*memo.coords)[1].x, (*memo.coords)[1].y, (*memo.coords)[1].z);
+		if (memo.coords && memo.meshPolyZ) {
+			ACAPI_WriteReport("[TopoMesh] first coord (x,y) = %.3f,%.3f; z=%.3f (from meshPolyZ)", false,
+				(*memo.coords)[1].x, (*memo.coords)[1].y, (*memo.meshPolyZ)[1]);
 		}
 	}
 	else {
@@ -513,9 +508,7 @@ bool CreateTopoMesh(const GS::UniString& jsonPayload)
 
 	GSErrCode err = BuildMesh(topo, params, storyElevM);
 	if (err != NoError) {
-		char errName[256] = {0};
-		ErrID_To_Name(err, errName);
-		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d (%s)", false, (int)err, errName);
+		ACAPI_WriteReport("[TopoMesh] BuildMesh returned %d", false, (int)err);
 	}
 	return err == NoError;
 }
